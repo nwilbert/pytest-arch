@@ -13,7 +13,6 @@ def build_import_model(base_path: Path) -> Node:
         if not module_ast.body:
             continue
         node = root_node.get_or_add(_get_node_path(base_path, module_path))
-        print(_get_node_path(base_path, module_path))
         assert not node.imports
         node.imports += _collect_imports(module_ast)
     return root_node

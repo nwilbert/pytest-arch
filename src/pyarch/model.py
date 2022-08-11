@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Sequence, Collection, Mapping, Optional
+from typing import Sequence, Optional, Callable
 
+
+# TODO: do not inherit from dataclass
+# TODO: add new type ImportPath that works similar to PosixPath but with dots (could then replace the Imort classs from testhelpers)
 
 @dataclass
 class Import:
@@ -11,10 +14,10 @@ class Import:
 
 @dataclass
 class Node:
-    # TODO: add path
+    # TODO: add full path on disk and relative path with respect to project root
     name: str
-    imports: Collection[Import] = field(default_factory=list)
-    children: Mapping[str, 'Node'] = field(default_factory=dict)
+    imports: list[Import] = field(default_factory=list)
+    children: dict[str, 'Node'] = field(default_factory=dict)
 
     def get(self, path: Sequence[str]) -> Optional['Node']:
         if path:
@@ -36,3 +39,9 @@ class Node:
             return child.get_or_add(remaining_path)
         else:
             return self
+
+    def walk(self, func: Callable[['Node'], None]):
+        func(self)
+        for child in self.children.values():
+            child.walk(func)
+
