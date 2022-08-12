@@ -9,8 +9,14 @@ python = "^3.10"
 pytest = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
+nox = "^2022.8.7"
+nox-poetry = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+line_length = 79
 

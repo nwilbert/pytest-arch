@@ -1,12 +1,14 @@
-import pytest
 import pathlib
 from inspect import cleandoc
 
+import pytest
 
-from pyarch.testutil import Project, Package, Import
+from pyarch.testutil import Import, Package, Project
 
 
-def _create_project_structure(struct: dict[str, str | dict], current_path: pathlib.Path):
+def _create_project_structure(
+    struct: dict[str, str | dict], current_path: pathlib.Path
+):
     for key, value in struct.items():
         path = current_path / key
         match value:

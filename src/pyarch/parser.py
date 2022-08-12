@@ -1,8 +1,8 @@
 import ast
 from pathlib import Path
-from typing import Sequence, Generator
+from typing import Generator, Sequence
 
-from .model import Node, Import
+from .model import Import, Node
 
 
 def build_import_model(base_path: Path) -> Node:
@@ -46,7 +46,11 @@ def _collect_imports(module_ast: ast.Module) -> Sequence[Import]:
                             from_path.append(name.name)
                         case str():
                             from_path.append(name)
-                    imports.append(Import(import_path=from_path, level=ast_import_from.level))
+                    imports.append(
+                        Import(
+                            import_path=from_path, level=ast_import_from.level
+                        )
+                    )
     return imports
 
 

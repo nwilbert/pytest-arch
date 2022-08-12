@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Sequence, Optional, Callable
-
+from typing import Callable, Optional, Sequence
 
 # TODO: do not inherit from dataclass
 # TODO: add new type ImportPath that works similar to PosixPath but with dots (could then replace the Imort classs from testhelpers)
+
 
 @dataclass
 class Import:
@@ -44,4 +44,3 @@ class Node:
         func(self)
         for child in self.children.values():
             child.walk(func)
-

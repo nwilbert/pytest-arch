@@ -3,27 +3,30 @@ import pytest
 from pyarch.parser import build_import_model
 
 
-@pytest.mark.parametrize('project_structure', [
-    {
-        'a': {
-            '__init__.py': '',
-            'b.py': """
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
+            'a': {
+                '__init__.py': '',
+                'b.py': """
                 from .x import y
                 from .x.y import z as xyz
-            """
-        },
-        'x': {
-            '__init__.py': """
+            """,
+            },
+            'x': {
+                '__init__.py': """
                 import a
             """,
-            'y.py': """
+                'y.py': """
                 import a
                 import a.b as ab
                 from a.b import c
-            """
+            """,
+            },
         }
-    }
-])
+    ],
+)
 def test_project_on_disk(project_on_disk):
     node = build_import_model(project_on_disk)
     assert set(node.children.keys()) == {'a', 'x'}

@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Sequence
 
-from .model import Node, Import as ImportFromNode
+from .model import Import as ImportFromNode
+from .model import Node
 from .parser import build_import_model
 
 
@@ -36,7 +37,6 @@ class Import:
 
 
 class Project:
-
     def __init__(self, path: Path):
         self._base_path = path.resolve(strict=True)
         self._base_node = build_import_model(self._base_path)
@@ -46,7 +46,6 @@ class Project:
 
 
 class Package:
-
     def __init__(self, base_node: Node, path: str):
         self._base_node = base_node
         self._relative_path = path
@@ -63,7 +62,7 @@ class Package:
                 import_by_path = import_by.import_path
                 if len(import_of_path) > len(import_by_path):
                     continue
-                if import_of_path == import_by_path[:len(import_of_path)]:
+                if import_of_path == import_by_path[: len(import_of_path)]:
                     matching_imports.append(import_by)
 
         self._base_node.walk(add_matching_imports)
