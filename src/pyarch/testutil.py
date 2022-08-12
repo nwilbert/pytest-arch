@@ -51,7 +51,6 @@ class Package:
         self._base_node = base_node
         self._relative_path = path
 
-    # TODO: use PurePosixPath? (and check that is_absolute() is false, must refer to base_path)
     def __contains__(self, import_of: Import):
         assert isinstance(import_of, Import)
         import_of_path = import_of.import_path
