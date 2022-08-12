@@ -18,6 +18,9 @@ pytest = "^7.1.2"
 [tool.poetry.dev-dependencies]
 nox = "^2022.8.7"
 nox-poetry = "^1.0.1"
+flake8 = "~4.0.1" # 5.0 is currently incompatible with blue
+mypy = "^0.971"
+blue = "^0.9.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -26,4 +29,13 @@ build-backend = "poetry.core.masonry.api"
 [tool.isort]
 profile = "black"
 line_length = 79
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
 

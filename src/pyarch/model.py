@@ -2,19 +2,22 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence
 
 # TODO: do not inherit from dataclass
-# TODO: add new type ImportPath that works similar to PosixPath but with dots (could then replace the Imort classs from testhelpers)
+# TODO: add new type ImportPath that works similar to PosixPath
+#  but with dots (could then replace the Imort classs from testhelpers)
 
 
 @dataclass
 class Import:
-    # TODO: add lineno, turn into nested dict structure for more efficient queries?
+    # TODO: add lineno, turn into nested dict structure
+    #  for more efficient queries?
     import_path: Sequence[str]
     level: int = 0
 
 
 @dataclass
 class Node:
-    # TODO: add full path on disk and relative path with respect to project root
+    # TODO: add full path on disk and relative path with respect
+    #  to project root
     name: str
     imports: list[Import] = field(default_factory=list)
     children: dict[str, 'Node'] = field(default_factory=dict)
@@ -40,7 +43,7 @@ class Node:
         else:
             return self
 
-    def walk(self, func: Callable[['Node'], None]):
+    def walk(self, func: Callable[['Node'], None]) -> None:
         func(self)
         for child in self.children.values():
             child.walk(func)

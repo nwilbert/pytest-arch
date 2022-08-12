@@ -40,6 +40,7 @@ def _collect_imports(module_ast: ast.Module) -> Sequence[Import]:
                             imports.append(Import(import_path=[name]))
             case ast.ImportFrom() as ast_import_from:
                 for name in ast_import_from.names:
+                    assert ast_import_from.module
                     from_path = ast_import_from.module.split('.')
                     match name:
                         case ast.alias():

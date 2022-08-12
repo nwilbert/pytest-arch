@@ -22,6 +22,8 @@ def test_assertions(pytester):
 
 
 # TODO: implement "without"
-# assert import_of('a.b') not in package('bobbytime.models').without('repository')
+# assert import_of('a.b') not in
+# package('bobbytime.models').without('repository')
 # TODO: implment import variations
-# assert Import_of_exactly('bobbytime.database') not in package('bobbytime.models').without('repository')
+# assert Import_of_exactly('bobbytime.database')
+# not in package('bobbytime.models').without('repository')

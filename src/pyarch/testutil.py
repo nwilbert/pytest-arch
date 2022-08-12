@@ -36,28 +36,21 @@ class Import:
         return self._import_path
 
 
-class Project:
-    def __init__(self, path: Path):
-        self._base_path = path.resolve(strict=True)
-        self._base_node = build_import_model(self._base_path)
-
-    def package(self, path: str):
-        return Package(self._base_node.get(path.split('.')), path)
-
-
 class Package:
     def __init__(self, base_node: Node, path: str):
         self._base_node = base_node
         self._relative_path = path
 
-    def __contains__(self, import_of: Import):
+    def __contains__(self, import_of: Import) -> bool:
         assert isinstance(import_of, Import)
         import_of_path = import_of.import_path
         matching_imports: list[ImportFromNode] = []
 
-        # TODO: add support for level / relative import (add node base path if level > 0)
-        # NOTE: could use set of tuples (with all truncations), for more efficient initial querying
-        def add_matching_imports(node: Node):
+        # TODO: add support for level / relative import
+        #  (add node base path if level > 0)
+        # NOTE: could use set of tuples (with all truncations),
+        # for more efficient initial querying.
+        def add_matching_imports(node: Node) -> None:
             for import_by in node.imports:
                 import_by_path = import_by.import_path
                 if len(import_of_path) > len(import_by_path):
@@ -74,3 +67,12 @@ class Package:
     def __repr__(self) -> str:
         # pytest uses repr for the explanation of failed assertions
         return str(self)
+
+
+class Project:
+    def __init__(self, path: Path):
+        self._base_path = path.resolve(strict=True)
+        self._base_node = build_import_model(self._base_path)
+
+    def package(self, path: str) -> Package:
+        return Package(self._base_node.get(path.split('.')), path)
