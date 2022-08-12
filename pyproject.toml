@@ -3,6 +3,13 @@ name = "pytest-arch"
 version = "0.1.0"
 description = ""
 authors = ["Niko Wilbert <niko.wilbert@tngtech.com>"]
+classifiers = ["Framework :: Pytest"]
+packages = [
+    { include = "pyarch", from = "src" },
+]
+
+[tool.poetry.plugins."pytest11"]
+arch = "pyarch.pytest_plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
