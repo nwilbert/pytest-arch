@@ -1,8 +1,11 @@
 import ast
+import logging
 from pathlib import Path
 from typing import Generator, Sequence
 
 from .model import Import, Node
+
+log = logging.getLogger(__name__)
 
 
 def build_import_model(base_path: Path) -> Node:
@@ -12,9 +15,10 @@ def build_import_model(base_path: Path) -> Node:
             module_ast = ast.parse(module_file.read(), str(module_path))
         if not module_ast.body:
             continue
-        node = root_node.get_or_add(_get_node_path(base_path, module_path))
+        node_path = _get_node_path(base_path, module_path)
+        node = root_node.get_or_add(node_path)
         assert not node.imports
-        node.imports += _collect_imports(module_ast)
+        node.imports += _collect_imports(module_ast, node_path)
     return root_node
 
 
@@ -27,7 +31,9 @@ def _get_node_path(base_path: Path, module_path: Path) -> Sequence[str]:
     return node_path
 
 
-def _collect_imports(module_ast: ast.Module) -> Sequence[Import]:
+def _collect_imports(
+    module_ast: ast.Module, node_path: Sequence[str]
+) -> Sequence[Import]:
     imports: list[Import] = []
     for ast_node in module_ast.body:
         match ast_node:
@@ -40,8 +46,19 @@ def _collect_imports(module_ast: ast.Module) -> Sequence[Import]:
                             imports.append(Import(import_path=[name]))
             case ast.ImportFrom() as ast_import_from:
                 for name in ast_import_from.names:
-                    assert ast_import_from.module
-                    from_path = ast_import_from.module.split('.')
+                    if ast_import_from.module:
+                        from_path = ast_import_from.module.split('.')
+                    else:
+                        from_path = []
+                    if (level := ast_import_from.level) > 0:
+                        if level > len(node_path):
+                            log.warning(
+                                f'Skipping import from {node_path} because '
+                                f'relative import level goes beyond project.'
+                            )
+                            continue
+                        else:
+                            from_path = list(node_path[:-level]) + from_path
                     match name:
                         case ast.alias():
                             from_path.append(name.name)

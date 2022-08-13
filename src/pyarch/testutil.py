@@ -46,8 +46,6 @@ class Package:
         import_of_path = import_of.import_path
         matching_imports: list[ImportFromNode] = []
 
-        # TODO: add support for level / relative import
-        #  (add node base path if level > 0)
         # NOTE: could use set of tuples (with all truncations),
         # for more efficient initial querying.
         def add_matching_imports(node: Node) -> None:
