@@ -7,10 +7,10 @@ from pyarch.testutil import Import, Package, Project
 
 
 @pytest.fixture
-def project(project_path: str) -> Project:
+def project(project_path: pathlib.Path) -> Project:
     # TODO: by default go up until there is an 'src' dir,
     #  or a pyproject.toml and read from it
-    return Project(pathlib.Path(project_path))
+    return Project(project_path)
 
 
 @pytest.fixture

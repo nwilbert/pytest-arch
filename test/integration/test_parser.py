@@ -1,3 +1,5 @@
+import pathlib
+
 import pytest
 
 from pyarch.parser import build_import_model
@@ -27,7 +29,7 @@ from pyarch.parser import build_import_model
         }
     ],
 )
-def test_project_on_disk(project_path):
+def test_project_on_disk(project_path: pathlib.Path):
     node = build_import_model(project_path)
     assert set(node.children.keys()) == {'a', 'x'}
     assert set(node.children['a'].children.keys()) == {'b'}
