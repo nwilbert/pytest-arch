@@ -59,7 +59,7 @@ class Package:
                     matching_imports.append(import_by)
 
         self._base_node.walk(add_matching_imports)
-        return len(import_of_path) > 0
+        return len(matching_imports) > 0
 
     def __str__(self) -> str:
         return f'package {self._relative_path}'
@@ -75,4 +75,7 @@ class Project:
         self._base_node = build_import_model(self._base_path)
 
     def package(self, path: str) -> Package:
-        return Package(self._base_node.get(path.split('.')), path)
+        node = self._base_node.get(path.split('.'))
+        if not node:
+            raise KeyError(f'Found no node for path {path} in project.')
+        return Package(node, path)

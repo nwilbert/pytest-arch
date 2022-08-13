@@ -45,5 +45,7 @@ class Node:
 
     def walk(self, func: Callable[['Node'], None]) -> None:
         func(self)
+        if not self.children:
+            return
         for child in self.children.values():
             child.walk(func)

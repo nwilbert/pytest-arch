@@ -27,8 +27,8 @@ from pyarch.parser import build_import_model
         }
     ],
 )
-def test_project_on_disk(project_on_disk):
-    node = build_import_model(project_on_disk)
+def test_project_on_disk(project_path):
+    node = build_import_model(project_path)
     assert set(node.children.keys()) == {'a', 'x'}
     assert set(node.children['a'].children.keys()) == {'b'}
     assert set(node.children['x'].children.keys()) == {'y'}

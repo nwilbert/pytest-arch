@@ -20,6 +20,6 @@ def _create_project_structure(
 
 
 @pytest.fixture
-def project_on_disk(project_structure, tmp_path):
+def project_path(project_structure, tmp_path):
     _create_project_structure(project_structure, pathlib.Path(tmp_path))
     return tmp_path
