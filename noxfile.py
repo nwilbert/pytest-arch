@@ -33,5 +33,5 @@ def mypy(session):
 
 @session
 def pytest(session):
-    session.install('pytest', '.')
+    session.install('pytest', 'pytest-mock', '.')
     session.run('pytest')

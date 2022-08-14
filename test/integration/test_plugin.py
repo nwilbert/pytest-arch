@@ -2,11 +2,14 @@ def test_assertions(pytester):
 
     pytester.makepyfile(
         """
-        from pyarch.testutil import Import as import_of
+        from pyarch.parser import build_import_model
+        from pyarch.testutil import Import, Package
 
-        def test_arch(package):
-            assert import_of('b.x') in package('a')
-            assert import_of('c') not in package('a')
+        def test_arch(project_path):
+            base_node = build_import_model(project_path)
+            package = Package(base_node.get(['a']))
+            assert Import('b.x') in package
+            assert Import('c') not in package
     """
     )
 

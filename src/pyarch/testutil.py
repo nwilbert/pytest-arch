@@ -1,9 +1,7 @@
-from pathlib import Path
 from typing import Sequence
 
 from .model import Import as ImportFromNode
 from .model import Node
-from .parser import build_import_model
 
 
 class Import:
@@ -37,9 +35,8 @@ class Import:
 
 
 class Package:
-    def __init__(self, base_node: Node, path: str):
+    def __init__(self, base_node: Node):
         self._base_node = base_node
-        self._relative_path = path
 
     def __contains__(self, import_of: Import) -> bool:
         assert isinstance(import_of, Import)
@@ -60,20 +57,8 @@ class Package:
         return len(matching_imports) > 0
 
     def __str__(self) -> str:
-        return f'package {self._relative_path}'
+        return f'package {self._base_node}'
 
     def __repr__(self) -> str:
         # pytest uses repr for the explanation of failed assertions
         return str(self)
-
-
-class Project:
-    def __init__(self, path: Path):
-        self._base_path = path.resolve(strict=True)
-        self._base_node = build_import_model(self._base_path)
-
-    def package(self, path: str) -> Package:
-        node = self._base_node.get(path.split('.'))
-        if not node:
-            raise KeyError(f'Found no node for path {path} in project.')
-        return Package(node, path)

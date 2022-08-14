@@ -1,7 +1,7 @@
 import ast
 import logging
 from pathlib import Path
-from typing import Generator, Sequence
+from typing import Generator, Sequence, Tuple
 
 from .model import Import, Node
 
@@ -10,9 +10,8 @@ log = logging.getLogger(__name__)
 
 def build_import_model(base_path: Path) -> Node:
     root_node = Node(name='')
-    for module_path in _walk_modules(base_path):
-        with open(module_path) as module_file:
-            module_ast = ast.parse(module_file.read(), str(module_path))
+    for module_path, module_content in _walk_modules(base_path):
+        module_ast = ast.parse(module_content, str(module_path))
         if not module_ast.body:
             continue
         node_path = _get_node_path(base_path, module_path)
@@ -72,7 +71,7 @@ def _collect_imports(
     return imports
 
 
-def _walk_modules(base_path: Path) -> Generator[Path, None, None]:
+def _walk_modules(base_path: Path) -> Generator[Tuple[Path, str], None, None]:
     for path in base_path.glob('**/*.py'):
         if not any(part.startswith('.') for part in path.parts):
-            yield path
+            yield path, path.read_text()
