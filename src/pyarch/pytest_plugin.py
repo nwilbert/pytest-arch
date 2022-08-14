@@ -13,3 +13,11 @@ def pytest_assertrepr_compare(
         case 'in', Import(), Package():
             return [f'{left} should be imported from {right}']
     return None
+
+
+# TODO: implement "without"
+# assert import_of('a.b') not in
+# package('bobbytime.models').without('repository')
+# TODO: implment import variations
+# assert Import_of_exactly('bobbytime.database')
+# not in package('bobbytime.models').without('repository')

@@ -1,5 +1,4 @@
-from typing import Sequence
-
+from .model import DotPath
 from .model import Import as ImportFromNode
 from .model import Node
 
@@ -20,17 +19,17 @@ class Import:
     """
 
     def __init__(self, path: str):
-        self._import_path = path.split('.')
+        self._import_path = DotPath(path)
 
     def __str__(self) -> str:
-        return f'import of {".".join(self._import_path)}'
+        return f'import of {self._import_path}'
 
     def __repr__(self) -> str:
         # pytest uses repr for the explanation of failed assertions
         return str(self)
 
     @property
-    def import_path(self) -> Sequence[str]:
+    def import_path(self) -> DotPath:
         return self._import_path
 
 
@@ -39,18 +38,21 @@ class Package:
         self._base_node = base_node
 
     def __contains__(self, import_of: Import) -> bool:
+        """
+        Checks if the given import path or any sub-path is imported anywhere
+        in this package.
+
+        Example: If the given import path is 'a.b' then an import
+        of 'a.b.c' would be reported as well, but not an import of 'a'.
+        """
         assert isinstance(import_of, Import)
         import_of_path = import_of.import_path
         matching_imports: list[ImportFromNode] = []
 
-        # NOTE: could use set of tuples (with all truncations),
-        # for more efficient initial querying.
         def add_matching_imports(node: Node) -> None:
             for import_by in node.imports:
                 import_by_path = import_by.import_path
-                if len(import_of_path) > len(import_by_path):
-                    continue
-                if import_of_path == import_by_path[: len(import_of_path)]:
+                if import_by_path.startswith(import_of_path):
                     matching_imports.append(import_by)
 
         self._base_node.walk(add_matching_imports)

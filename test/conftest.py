@@ -4,7 +4,7 @@ from typing import Callable
 
 import pytest
 
-from pyarch.model import Node
+from pyarch.model import DotPath, Node
 from pyarch.parser import build_import_model
 from pyarch.testutil import Package
 
@@ -33,7 +33,7 @@ def project_base_node(project_structure, mocker):
 @pytest.fixture
 def package(project_base_node: Node) -> Callable[[str], Package]:
     def _create_package(path: str) -> Package:
-        node = project_base_node.get(path.split('.'))
+        node = project_base_node.get(DotPath(path))
         if not node:
             raise KeyError(f'Found no node for path {path} in project.')
         return Package(node)

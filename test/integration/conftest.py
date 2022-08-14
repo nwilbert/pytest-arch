@@ -16,6 +16,8 @@ def _create_project_on_disk(struct: dict[str, str | dict], current_path: Path):
 
 
 @pytest.fixture
-def project_path(project_structure, tmp_path):
-    _create_project_on_disk(project_structure, Path(tmp_path))
+def project_path(
+    project_structure: dict[str, str | dict], tmp_path: Path
+) -> Path:
+    _create_project_on_disk(project_structure, tmp_path)
     return tmp_path

@@ -47,11 +47,3 @@ def test_relative_import_assertion(package):
     # assert import_of('x.y.z') in package('a.b')
     # assert import_of('x.y.m') not in package('a')
     # assert import_of('x.y.m') not in package('a.b')
-
-
-# TODO: implement "without"
-# assert import_of('a.b') not in
-# package('bobbytime.models').without('repository')
-# TODO: implment import variations
-# assert Import_of_exactly('bobbytime.database')
-# not in package('bobbytime.models').without('repository')
