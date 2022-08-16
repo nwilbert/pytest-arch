@@ -32,7 +32,7 @@ class DotPath:
             parts[-1] = parts[-1].removesuffix('.py')
         return cls(parts)
 
-    def startswith(self, other: 'DotPath') -> bool:
+    def is_relative_to(self, other: 'DotPath') -> bool:
         if len(other.parts) > len(self.parts):
             return False
         if other.parts == self.parts[: len(other.parts)]:

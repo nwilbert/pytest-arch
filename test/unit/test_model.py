@@ -52,8 +52,8 @@ def test_dotpath_from_path(path: Path, dotpath: DotPath):
         ('e.ab.cd', 'ab.cd', False),
     ],
 )
-def test_dotpath_startswith(path: str, other: str, result: bool):
-    assert DotPath(path).startswith(DotPath(other)) == result
+def test_dotpath_is_relative_to(path: str, other: str, result: bool):
+    assert DotPath(path).is_relative_to(DotPath(other)) == result
 
 
 def test_dotpath_name():

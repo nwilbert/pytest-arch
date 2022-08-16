@@ -1,5 +1,7 @@
 def test_assertions(pytester):
 
+    # TODO: copy files from disk
+    #  https://docs.pytest.org/en/7.1.x/how-to/writing_plugins.html#testing-plugins
     pytester.makepyfile(
         """
         from pyarch.parser import build_import_model

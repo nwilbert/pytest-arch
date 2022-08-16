@@ -52,7 +52,7 @@ class Package:
         def add_matching_imports(node: Node) -> None:
             for import_by in node.imports:
                 import_by_path = import_by.import_path
-                if import_by_path.startswith(import_of_path):
+                if import_by_path.is_relative_to(import_of_path):
                     matching_imports.append(import_by)
 
         self._base_node.walk(add_matching_imports)

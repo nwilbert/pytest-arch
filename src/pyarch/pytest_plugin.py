@@ -2,6 +2,9 @@ from typing import Sequence
 
 from pyarch.testutil import Import, Package
 
+# TODO: add fixture with heuristic to find source dir
+#   https://docs.pytest.org/en/7.1.x/reference/customize.html#finding-the-rootdir
+
 
 def pytest_assertrepr_compare(
     op: str, left: str, right: str
