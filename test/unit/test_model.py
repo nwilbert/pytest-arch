@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from pyarch.model import DotPath
+from pyarch.model import DotPath, ImportInModule, ModuleNode, RootNode
 
 
 @pytest.mark.parametrize(
@@ -94,3 +94,79 @@ def test_dotpath_truediv():
     assert DotPath('a.b') / DotPath('c') == DotPath('a.b.c')
     assert DotPath('a') / 'b' == DotPath('a.b')
     assert 'a' / DotPath('b') == DotPath('a.b')
+
+
+@pytest.fixture
+def tree_base_node():
+    base_node = RootNode()
+    base_node.get_or_add(DotPath('1'))
+    base_node.get_or_add(DotPath('2'))
+    base_node.get_or_add(DotPath('2.1'))
+    return base_node
+
+
+@pytest.mark.parametrize(
+    'path_str, result_name',
+    [
+        ('1', '1'),
+        ('2', '2'),
+        ('2.1', '1'),
+    ],
+)
+def test_node_get(tree_base_node, path_str, result_name):
+    assert tree_base_node.get(DotPath(path_str)).name == result_name
+
+
+def test_node_get_nested(tree_base_node):
+    assert tree_base_node.get(DotPath('2')).get(DotPath('1')).name == '1'
+
+
+def test_node_get_non_existend(tree_base_node):
+    assert tree_base_node.get(DotPath('1.1')) is None
+
+
+def test_node_get_root(tree_base_node):
+    with pytest.raises(Exception):
+        assert tree_base_node.get(DotPath())
+
+
+def test_node_get_or_add_root():
+    root_node = RootNode()
+    new_node = root_node.get_or_add(DotPath('a'))
+    assert new_node.name == 'a'
+    assert root_node.get(DotPath('a')).name == 'a'
+
+
+def test_node_get_or_add_new_parent(tree_base_node):
+    new_node = tree_base_node.get_or_add(DotPath('1.a.b'))
+    assert new_node.name == 'b'
+    new_parent_node = tree_base_node.get(DotPath('1.a'))
+    assert new_parent_node.name == 'a'
+    assert new_parent_node.get(DotPath('b')).name == 'b'
+
+
+def test_node_add_imports():
+    imports = [ImportInModule(DotPath('a')), ImportInModule(DotPath('b'))]
+    node = ModuleNode('x')
+    assert len(node.imports) == 0
+    node.add_import(*imports)
+    assert len(node.imports) == 2
+    assert {str(import_of.import_path) for import_of in node.imports} == {
+        'a',
+        'b',
+    }
+
+
+def test_node_walk():
+    base_node = ModuleNode('base')
+    base_node.get_or_add(DotPath('a.c'))
+    base_node.get_or_add(DotPath('a.b.x'))
+    visited = []
+
+    def visit(node):
+        nonlocal visited
+        visited.append(node.name)
+
+    base_node.walk(visit)
+    assert len(visited) == 5
+    assert set(visited) == {'base', 'a', 'c', 'b', 'x'}

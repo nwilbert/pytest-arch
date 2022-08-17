@@ -1,6 +1,6 @@
 from .model import DotPath
-from .model import Import as ImportFromNode
-from .model import Node
+from .model import ImportInModule as ImportFromNode
+from .model import ModuleNode
 
 
 class Import:
@@ -34,7 +34,7 @@ class Import:
 
 
 class Package:
-    def __init__(self, base_node: Node):
+    def __init__(self, base_node: ModuleNode):
         self._base_node = base_node
 
     def __contains__(self, import_of: Import) -> bool:
@@ -49,7 +49,7 @@ class Package:
         import_of_path = import_of.import_path
         matching_imports: list[ImportFromNode] = []
 
-        def add_matching_imports(node: Node) -> None:
+        def add_matching_imports(node: ModuleNode) -> None:
             for import_by in node.imports:
                 import_by_path = import_by.import_path
                 if import_by_path.is_relative_to(import_of_path):

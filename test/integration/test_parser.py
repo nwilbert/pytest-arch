@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from pyarch.model import DotPath, Import
+from pyarch.model import DotPath, ImportInModule
 from pyarch.parser import build_import_model
 
 
@@ -15,17 +15,17 @@ from pyarch.parser import build_import_model
                 'a': {'b.py': 'from .. import y'},
             },
             'a.b',
-            Import(import_path=DotPath('y'), level=2),
+            ImportInModule(import_path=DotPath('y'), level=2),
         ),
         (
             {'a': {'b': {'c.py': 'from .. import y'}}},
             'a.b.c',
-            Import(import_path=DotPath('a.y'), level=2),
+            ImportInModule(import_path=DotPath('a.y'), level=2),
         ),
         (
             {'a': {'b.py': 'from .x import y'}},
             'a.b',
-            Import(import_path=DotPath('a.x.y'), level=1),
+            ImportInModule(import_path=DotPath('a.x.y'), level=1),
         ),
     ],
 )
@@ -80,10 +80,6 @@ def test_relative_import_beyond_base(project_path, caplog):
 )
 def test_project_structure_nodes(project_path: Path):
     node = build_import_model(project_path)
-    assert set(node.children.keys()) == {'a', 'x'}
-    assert set(node.children['a'].children.keys()) == {'b'}
-    assert set(node.children['x'].children.keys()) == {'y'}
-
     assert len(node.get(DotPath('a')).imports) == 0
     assert len(node.get(DotPath('a.b')).imports) == 2
     assert len(node.get(DotPath('x')).imports) == 1

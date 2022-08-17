@@ -3,13 +3,13 @@ import logging
 from pathlib import Path
 from typing import Generator, Sequence, Tuple
 
-from .model import DotPath, Import, Node
+from .model import DotPath, ImportInModule, RootNode
 
 log = logging.getLogger(__name__)
 
 
-def build_import_model(base_path: Path) -> Node:
-    root_node = Node(name='')
+def build_import_model(base_path: Path) -> RootNode:
+    root_node = RootNode()
     for module_path, module_content in _walk_modules(base_path):
         module_ast = ast.parse(module_content, str(module_path))
         if not module_ast.body:
@@ -17,23 +17,23 @@ def build_import_model(base_path: Path) -> Node:
         dot_path = DotPath.from_path(module_path.relative_to(base_path))
         node = root_node.get_or_add(dot_path)
         assert not node.imports
-        node.imports += _collect_imports(module_ast, dot_path)
+        node.add_import(*_collect_imports(module_ast, dot_path))
     return root_node
 
 
 def _collect_imports(
     module_ast: ast.Module, node_path: DotPath
-) -> Sequence[Import]:
-    imports: list[Import] = []
+) -> Sequence[ImportInModule]:
+    imports: list[ImportInModule] = []
     for ast_node in module_ast.body:
         match ast_node:
             case ast.Import() as ast_import:
                 for name in ast_import.names:
                     match name:
                         case ast.alias():
-                            imports.append(Import(DotPath(name.name)))
+                            imports.append(ImportInModule(DotPath(name.name)))
                         case str():
-                            imports.append(Import(DotPath(name)))
+                            imports.append(ImportInModule(DotPath(name)))
             case ast.ImportFrom() as ast_import_from:
                 for name in ast_import_from.names:
                     if ast_import_from.module:
@@ -57,7 +57,7 @@ def _collect_imports(
                         case str():
                             from_path /= name
                     imports.append(
-                        Import(
+                        ImportInModule(
                             import_path=from_path, level=ast_import_from.level
                         )
                     )
