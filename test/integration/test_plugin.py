@@ -1,32 +1,65 @@
-def test_assertions(pytester):
-
-    # TODO: copy files from disk
-    #  https://docs.pytest.org/en/7.1.x/how-to/writing_plugins.html#testing-plugins
+def test_config_project_path_toml(pytester):
+    """Test that config values are read from pyproject.toml"""
+    pytester.makepyprojecttoml(
+        """
+        [tool.pytest.ini_options]
+        arch_project_paths = [
+            "foobar",
+            "/foo/bar"
+        ]
+    """
+    )
     pytester.makepyfile(
         """
-        from pyarch.parser import build_import_model
-        from pyarch.model import DotPath
-        from pyarch.testutil import Import, Package
+        from pathlib import Path
 
-        def test_arch(project_path):
-            base_node = build_import_model(project_path)
-            package = Package(base_node.get(DotPath('a')))
-            assert Import(DotPath('b.x')) in package
-            assert Import(DotPath('c')) not in package
+        def test_arch(arch_project_paths, pytestconfig):
+            assert len(arch_project_paths) == 2
+            assert arch_project_paths[0] == pytestconfig.rootpath / 'foobar'
+            assert arch_project_paths[1] == Path('/foo/bar')
     """
     )
-
-    pytester.makeconftest(
-        """
-        import pytest
-        import pathlib
-
-        @pytest.fixture
-        def project_path(tmp_path):
-            (pathlib.Path(tmp_path) / 'a.py').write_text('from b import x')
-            return tmp_path
-    """
-    )
-
     result = pytester.runpytest()
     result.assert_outcomes(passed=1)
+
+
+def test_config_project_path_ini(pytester):
+    """Test that config values are read from tox.ini"""
+    pytester.makeini(
+        """
+        [pytest]
+        arch_project_paths =
+            foobar
+            /foo/bar
+    """
+    )
+    pytester.makepyfile(
+        """
+        from pathlib import Path
+
+        def test_arch(arch_project_paths, pytestconfig):
+            assert len(arch_project_paths) == 2
+            assert arch_project_paths[0] == pytestconfig.rootpath / 'foobar'
+            assert arch_project_paths[1] == Path('/foo/bar')
+
+    """
+    )
+    result = pytester.runpytest()
+    result.assert_outcomes(passed=1)
+
+
+def test_simple_project(pytester):
+    pytester.makepyfile(foobar='from foo import bar')
+    pytester.makepyfile(
+        """
+        from pyarch.model import DotPath
+        from pyarch.assertion import ImportOf
+
+        def test_arch(package):
+            assert ImportOf(DotPath('foo.bar')) in package('foobar')
+            assert ImportOf(DotPath('fiz')) not in package('foobar')
+    """
+    )
+    result = pytester.runpytest()
+    result.assert_outcomes(passed=1)
+    print(result.stdout)

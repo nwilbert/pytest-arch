@@ -1,7 +1,5 @@
 import pytest
 
-from pyarch.testutil import Import as import_of
-
 
 @pytest.mark.parametrize(
     'project_structure',
@@ -16,7 +14,7 @@ from pyarch.testutil import Import as import_of
         }
     ],
 )
-def test_absolute_import_assertion(package):
+def test_absolute_import_assertion(package, import_of):
     assert import_of('a') in package('b')
     assert import_of('c') not in package('b')
     assert import_of('b.x') in package('a')
@@ -38,7 +36,7 @@ def test_absolute_import_assertion(package):
         }
     ],
 )
-def test_relative_import_assertion(package):
+def test_relative_import_assertion(package, import_of):
     assert import_of('x') not in package('a')
     assert import_of('a.x') in package('a')
     assert import_of('x') not in package('a.b')

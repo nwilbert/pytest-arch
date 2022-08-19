@@ -3,7 +3,7 @@ from .model import ImportInModule as ImportFromNode
 from .model import ModuleNode
 
 
-class Import:
+class ImportOf:
     """
     This means all explicit imports of elements below this.
     So a.b would also match imports of a.b.c.
@@ -18,8 +18,8 @@ class Import:
 
     """
 
-    def __init__(self, path: str):
-        self._import_path = DotPath(path)
+    def __init__(self, path: DotPath):
+        self._import_path = path
 
     def __str__(self) -> str:
         return f'import of {self._import_path}'
@@ -32,12 +32,16 @@ class Import:
     def import_path(self) -> DotPath:
         return self._import_path
 
+    @classmethod
+    def from_str_path(cls, dot_path: str) -> 'ImportOf':
+        return cls(DotPath(dot_path))
+
 
 class Package:
     def __init__(self, base_node: ModuleNode):
         self._base_node = base_node
 
-    def __contains__(self, import_of: Import) -> bool:
+    def __contains__(self, import_of: ImportOf) -> bool:
         """
         Checks if the given import path or any sub-path is imported anywhere
         in this package.
@@ -45,7 +49,6 @@ class Package:
         Example: If the given import path is 'a.b' then an import
         of 'a.b.c' would be reported as well, but not an import of 'a'.
         """
-        assert isinstance(import_of, Import)
         import_of_path = import_of.import_path
         matching_imports: list[ImportFromNode] = []
 

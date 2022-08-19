@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.plugins."pytest11"]
-arch = "pyarch.pytest_plugin"
+arch = "pyarch.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
