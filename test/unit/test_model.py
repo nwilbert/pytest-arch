@@ -99,9 +99,9 @@ def test_dotpath_truediv():
 @pytest.fixture
 def tree_base_node():
     base_node = RootNode()
-    base_node.get_or_add(DotPath('1'))
-    base_node.get_or_add(DotPath('2'))
-    base_node.get_or_add(DotPath('2.1'))
+    base_node.get_or_add(DotPath('1'), Path('1'))
+    base_node.get_or_add(DotPath('2'), Path('2'))
+    base_node.get_or_add(DotPath('2.1'), Path('1', '2'))
     return base_node
 
 
@@ -132,24 +132,30 @@ def test_node_get_root(tree_base_node):
 
 def test_node_get_or_add_root():
     root_node = RootNode()
-    new_node = root_node.get_or_add(DotPath('a'))
+    new_node = root_node.get_or_add(DotPath('a'), Path('a'))
     assert new_node.name == 'a'
+    assert new_node.file_path == Path('a')
     assert root_node.get(DotPath('a')).name == 'a'
 
 
 def test_node_get_or_add_new_parent(tree_base_node):
-    new_node = tree_base_node.get_or_add(DotPath('1.a.b'))
+    new_node = tree_base_node.get_or_add(DotPath('1.a.b'), Path('1', 'a', 'b'))
     assert new_node.name == 'b'
+    assert new_node.file_path == Path('1', 'a', 'b')
     new_parent_node = tree_base_node.get(DotPath('1.a'))
     assert new_parent_node.name == 'a'
+    assert new_parent_node.file_path == Path('1', 'a')
     assert new_parent_node.get(DotPath('b')).name == 'b'
 
 
 def test_node_add_imports():
-    imports = [ImportInModule(DotPath('a')), ImportInModule(DotPath('b'))]
-    node = ModuleNode('x')
+    imports = [
+        ImportInModule(DotPath('a'), line_no=1),
+        ImportInModule(DotPath('b'), line_no=2),
+    ]
+    node = ModuleNode('x', Path('foobar'))
     assert len(node.imports) == 0
-    node.add_import(*imports)
+    node.add_imports(imports)
     assert len(node.imports) == 2
     assert {str(import_of.import_path) for import_of in node.imports} == {
         'a',
@@ -157,10 +163,23 @@ def test_node_add_imports():
     }
 
 
+def test_node_init_file():
+    imports = [
+        ImportInModule(DotPath('a'), line_no=1),
+        ImportInModule(DotPath('b'), line_no=2),
+    ]
+    node = ModuleNode('x', Path('foobar'))
+    assert node.file_path.name == 'foobar'
+    assert len(node.imports) == 0
+    node.add_data_for_init_file(imports)
+    assert len(node.imports) == 2
+    assert node.file_path == Path('foobar') / '__init__.py'
+
+
 def test_node_walk():
-    base_node = ModuleNode('base')
-    base_node.get_or_add(DotPath('a.c'))
-    base_node.get_or_add(DotPath('a.b.x'))
+    base_node = ModuleNode('base', Path())
+    base_node.get_or_add(DotPath('a.c'), Path())
+    base_node.get_or_add(DotPath('a.b.x'), Path())
     visited = []
 
     def visit(node):

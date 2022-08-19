@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Any, Callable, Iterable, Optional, Sequence, Union
 
 
@@ -72,46 +72,53 @@ class DotPath:
 
 @dataclass
 class ImportInModule:
-    # TODO: add lineno
     import_path: DotPath
-    level: int = 0
+    line_no: int
 
 
 class RootNode:
     def __init__(self) -> None:
         self._children: dict[str, 'ModuleNode'] = {}
 
-    def get(self, path: DotPath) -> Optional['ModuleNode']:
-        if not path.parts:
+    def get(self, dot_path: DotPath) -> Optional['ModuleNode']:
+        if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
-        if child := self._children.get(path.parts[0]):
+        if child := self._children.get(dot_path.parts[0]):
             remaining_path = (
-                DotPath(path.parts[1:]) if len(path.parts) > 1 else DotPath()
+                DotPath(dot_path.parts[1:])
+                if len(dot_path.parts) > 1
+                else DotPath()
             )
             return child.get(remaining_path)
         return None
 
-    def get_or_add(self, path: DotPath) -> 'ModuleNode':
-        if not path.parts:
+    def get_or_add(self, dot_path: DotPath, file_path: Path) -> 'ModuleNode':
+        if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
-        name = path.parts[0]
+        name = dot_path.parts[0]
         remaining_path = (
-            DotPath(path.parts[1:]) if len(path.parts) > 1 else DotPath()
+            DotPath(dot_path.parts[1:])
+            if len(dot_path.parts) > 1
+            else DotPath()
         )
         if not (child := self._children.get(name)):
-            child = ModuleNode(name=name)
+            if remaining_path.parts:
+                child_file_path = Path(
+                    *file_path.parts[: -len(remaining_path.parts)]
+                )
+            else:
+                child_file_path = file_path
+            child = ModuleNode(name=name, file_path=child_file_path)
             self._children[name] = child
-        return child.get_or_add(remaining_path)
+        return child.get_or_add(remaining_path, file_path)
 
 
 @dataclass
 class ModuleNode(RootNode):
-    # TODO: add full path on disk and relative path with respect
-    #  to project root
-
-    def __init__(self, name: str):
+    def __init__(self, name: str, file_path: Path):
         super().__init__()
         self._name: str = name
+        self._file_path: Path = file_path
         self._imports: list[ImportInModule] = []
 
     @property
@@ -122,18 +129,30 @@ class ModuleNode(RootNode):
     def imports(self) -> Sequence[ImportInModule]:
         return self._imports
 
-    def add_import(self, *imports: ImportInModule) -> None:
+    @property
+    def file_path(self) -> Path:
+        return self._file_path
+
+    def add_imports(self, imports: Iterable[ImportInModule]) -> None:
         self._imports += imports
 
-    def get(self, path: DotPath) -> Optional['ModuleNode']:
-        if not path.parts:
-            return self
-        return super().get(path)
+    def add_data_for_init_file(
+        self, imports: Iterable[ImportInModule]
+    ) -> None:
+        if self._file_path.name != '__init__.py':
+            assert not self._file_path.suffix
+            self._file_path /= '__init__.py'
+        self._imports += imports
 
-    def get_or_add(self, path: DotPath) -> 'ModuleNode':
-        if not path.parts:
+    def get(self, dot_path: DotPath) -> Optional['ModuleNode']:
+        if not dot_path.parts:
             return self
-        return super().get_or_add(path)
+        return super().get(dot_path)
+
+    def get_or_add(self, dot_path: DotPath, file_path: Path) -> 'ModuleNode':
+        if not dot_path.parts:
+            return self
+        return super().get_or_add(dot_path, file_path)
 
     def walk(self, func: Callable[['ModuleNode'], None]) -> None:
         func(self)

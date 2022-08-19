@@ -15,17 +15,17 @@ from pyarch.parser import build_import_model
                 'a': {'b.py': 'from .. import y'},
             },
             'a.b',
-            ImportInModule(import_path=DotPath('y'), level=2),
+            ImportInModule(import_path=DotPath('y'), line_no=1),
         ),
         (
-            {'a': {'b': {'c.py': 'from .. import y'}}},
+            {'a': {'b': {'c.py': '...\nfrom .. import y'}}},
             'a.b.c',
-            ImportInModule(import_path=DotPath('a.y'), level=2),
+            ImportInModule(import_path=DotPath('a.y'), line_no=2),
         ),
         (
-            {'a': {'b.py': 'from .x import y'}},
+            {'a': {'b.py': '...\n\nfrom .x import y'}},
             'a.b',
-            ImportInModule(import_path=DotPath('a.x.y'), level=1),
+            ImportInModule(import_path=DotPath('a.x.y'), line_no=3),
         ),
     ],
 )
@@ -58,8 +58,44 @@ def test_relative_import_beyond_base(project_path, caplog):
     'project_structure',
     [
         {
+            'a': {'__init__.py': 'import x'},
+        }
+    ],
+)
+def test_import_from_init(project_path):
+    base_node = build_import_model(project_path)
+    assert base_node.get(DotPath('a')).imports == [
+        ImportInModule(DotPath(('x')), 1)
+    ]
+
+
+@pytest.mark.parametrize(
+    'project_structure, path, import_obj',
+    [
+        (
+            {
+                'a': {'b.py': 'import x'},
+            },
+            'a.b',
+            ImportInModule(import_path=DotPath('x'), line_no=1),
+        ),
+        (
+            {'a': {'b': {'c.py': '...\nimport x as y'}}},
+            'a.b.c',
+            ImportInModule(import_path=DotPath('x'), line_no=2),
+        ),
+    ],
+)
+def test_absolute_import(project_path: Path, path: DotPath, import_obj):
+    base_node = build_import_model(project_path)
+    assert base_node.get(DotPath(path)).imports == [import_obj]
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
             'a': {
-                '__init__.py': '',
                 'b.py': """
                     from .x import y
                     from .x.y import z as xyz
@@ -81,6 +117,12 @@ def test_relative_import_beyond_base(project_path, caplog):
 def test_project_structure_nodes(project_path: Path):
     node = build_import_model(project_path)
     assert len(node.get(DotPath('a')).imports) == 0
+    assert node.get(DotPath('a'))._file_path == project_path / 'a'
     assert len(node.get(DotPath('a.b')).imports) == 2
+    assert node.get(DotPath('a.b'))._file_path == project_path / 'a' / 'b.py'
     assert len(node.get(DotPath('x')).imports) == 1
+    assert (
+        node.get(DotPath('x'))._file_path == project_path / 'x' / '__init__.py'
+    )
     assert len(node.get(DotPath('x.y')).imports) == 3
+    assert node.get(DotPath('x.y'))._file_path == project_path / 'x' / 'y.py'

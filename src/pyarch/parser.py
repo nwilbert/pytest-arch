@@ -15,9 +15,12 @@ def build_import_model(base_path: Path) -> RootNode:
         if not module_ast.body:
             continue
         dot_path = DotPath.from_path(module_path.relative_to(base_path))
-        node = root_node.get_or_add(dot_path)
-        assert not node.imports
-        node.add_import(*_collect_imports(module_ast, dot_path))
+        node = root_node.get_or_add(dot_path, module_path)
+        imports = _collect_imports(module_ast, dot_path)
+        if module_path.name == '__init__.py':
+            node.add_data_for_init_file(imports)
+        else:
+            node.add_imports(imports)
     return root_node
 
 
@@ -28,14 +31,15 @@ def _collect_imports(
     for ast_node in module_ast.body:
         match ast_node:
             case ast.Import() as ast_import:
-                for name in ast_import.names:
-                    match name:
-                        case ast.alias():
-                            imports.append(ImportInModule(DotPath(name.name)))
-                        case str():
-                            imports.append(ImportInModule(DotPath(name)))
+                for alias in ast_import.names:
+                    imports.append(
+                        ImportInModule(
+                            import_path=DotPath(alias.name),
+                            line_no=alias.lineno,
+                        )
+                    )
             case ast.ImportFrom() as ast_import_from:
-                for name in ast_import_from.names:
+                for alias in ast_import_from.names:
                     if ast_import_from.module:
                         from_path = DotPath(ast_import_from.module)
                     else:
@@ -51,14 +55,10 @@ def _collect_imports(
                             from_path = (
                                 DotPath(node_path.parts[:-level]) / from_path
                             )
-                    match name:
-                        case ast.alias():
-                            from_path /= name.name
-                        case str():
-                            from_path /= name
+                    from_path /= alias.name
                     imports.append(
                         ImportInModule(
-                            import_path=from_path, level=ast_import_from.level
+                            import_path=from_path, line_no=alias.lineno
                         )
                     )
     return imports
