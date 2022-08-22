@@ -163,7 +163,7 @@ def test_node_add_imports():
     }
 
 
-def test_node_init_file():
+def test_node_for_init_file():
     imports = [
         ImportInModule(DotPath('a'), line_no=1),
         ImportInModule(DotPath('b'), line_no=2),
@@ -180,12 +180,6 @@ def test_node_walk():
     base_node = ModuleNode('base', Path())
     base_node.get_or_add(DotPath('a.c'), Path())
     base_node.get_or_add(DotPath('a.b.x'), Path())
-    visited = []
-
-    def visit(node):
-        nonlocal visited
-        visited.append(node.name)
-
-    base_node.walk(visit)
+    visited = [node.name for node in base_node.walk()]
     assert len(visited) == 5
     assert set(visited) == {'base', 'a', 'c', 'b', 'x'}

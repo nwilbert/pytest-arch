@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Any, Callable, Iterable, Optional, Sequence, Union
+from typing import Any, Iterable, Iterator, Optional, Sequence, Union
 
 
 class DotPath:
@@ -154,7 +154,7 @@ class ModuleNode(RootNode):
             return self
         return super().get_or_add(dot_path, file_path)
 
-    def walk(self, func: Callable[['ModuleNode'], None]) -> None:
-        func(self)
+    def walk(self) -> Iterator['ModuleNode']:
+        yield self
         for child in self._children.values():
-            child.walk(func)
+            yield from child.walk()

@@ -1,10 +1,10 @@
 import logging
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence
 
 import pytest
 
-from .assertion import ImportOf, Package
+from .assertion import ImportOf, ModulesAt
 from .model import DotPath, RootNode
 from .parser import build_import_model
 
@@ -23,20 +23,21 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def pytest_assertrepr_compare(
-    op: str, left: str, right: str
+    op: str, left: Any, right: Any
 ) -> Sequence[str] | None:
     match op, left, right:
-        case 'not in', ImportOf(), Package():
-            # TODO: call helper method for nice explanation with lineno
-            return [f'{left} should not be imported from {right}']
-        case 'in', ImportOf(), Package():
-            return [f'{left} should be imported from {right}']
+        case 'not in', ImportOf() as import_of, ModulesAt() as package:
+            first_line = f'{left} {op} {right}'
+            return [first_line] + package.explain_not_contains_false(import_of)
+        case 'in', ImportOf() as import_of, ModulesAt() as package:
+            first_line = f'{left} {op} {right}'
+            return [first_line] + package.explain_contains_false(import_of)
     return None
 
 
 @pytest.fixture
 def arch_project_paths(pytestconfig: pytest.Config) -> Sequence[Path]:
-    # note that pytest already converts relative to absolute paths
+    # Note: pytest already converts relative to absolute paths
     paths = pytestconfig.getini(INI_NAME)
     if not paths:
         paths = [pytestconfig.rootpath]
@@ -52,24 +53,16 @@ def arch_root_node(arch_project_paths: Sequence[Path]) -> RootNode:
 
 
 @pytest.fixture
-def package(arch_root_node: RootNode) -> Callable[[str], Package]:
-    def _create_package(path: str) -> Package:
+def modules_at(arch_root_node: RootNode) -> Callable[[str], ModulesAt]:
+    def _create_modules_at(path: str) -> ModulesAt:
         node = arch_root_node.get(DotPath(path))
         if not node:
             raise KeyError(f'Found no node for path {path} in project.')
-        return Package(node)
+        return ModulesAt(node)
 
-    return _create_package
+    return _create_modules_at
 
 
 @pytest.fixture
 def import_of() -> Callable[[str], ImportOf]:
     return ImportOf.from_str_path
-
-
-# TODO: implement "without"
-# assert import_of('a.b') not in
-# package('bobbytime.models').without('repository')
-# TODO: implment import variations
-# assert Import_of_exactly('bobbytime.database')
-# not in package('bobbytime.models').without('repository')
