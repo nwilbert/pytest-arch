@@ -6,7 +6,7 @@ from typing import Any, Iterable, Iterator, Optional, Sequence, Union
 class DotPath:
     """
     Represent a 'path' with dot as the separator,
-    as it is used in Python imports.
+    as it is used for imports in Python.
 
     Largely follows the Path interface from pathlib.
     """
@@ -72,12 +72,15 @@ class DotPath:
 
 @dataclass
 class ImportInModule:
+    """Represents a single import in a module."""
     import_path: DotPath
     line_no: int
     level: int = 0
 
 
 class RootNode:
+    """Represents the root of a tree of module nodes."""
+
     def __init__(self) -> None:
         self._children: dict[str, 'ModuleNode'] = {}
 
@@ -114,8 +117,16 @@ class RootNode:
         return child.get_or_add(remaining_path, file_path)
 
 
-@dataclass
 class ModuleNode(RootNode):
+    """Represents a node in a module tree.
+
+    Its main use is representing a Python module,
+    but it can also represent just a directory.
+    If the directory is a package then the content of this node actually
+    represents the __init__.py file (in this case there is no separate
+    node for the __init__.py file).
+    """
+
     def __init__(self, name: str, file_path: Path):
         super().__init__()
         self._name: str = name
