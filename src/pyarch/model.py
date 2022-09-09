@@ -74,6 +74,7 @@ class DotPath:
 class ImportInModule:
     import_path: DotPath
     line_no: int
+    level: int = 0
 
 
 class RootNode:

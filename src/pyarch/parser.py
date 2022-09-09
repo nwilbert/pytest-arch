@@ -58,7 +58,9 @@ def _collect_imports(
                     from_path /= alias.name
                     imports.append(
                         ImportInModule(
-                            import_path=from_path, line_no=alias.lineno
+                            import_path=from_path,
+                            line_no=alias.lineno,
+                            level=ast_import_from.level,
                         )
                     )
     return imports

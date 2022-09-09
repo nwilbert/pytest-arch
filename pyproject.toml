@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-arch"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Niko Wilbert <niko.wilbert@tngtech.com>"]
 classifiers = ["Framework :: Pytest"]
@@ -13,12 +13,12 @@ arch = "pyarch.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pytest = "^7.1.2"
+pytest = "^7.1.3"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 nox = "^2022.8.7"
 nox-poetry = "^1.0.1"
-flake8 = "~4.0.1" # 5.0 is currently incompatible with blue
+flake8 = "~4.0.1" # 5.0.4 is incompatible with blue
 mypy = "^0.971"
 blue = "^0.9.1"
 pytest-mock = "^3.8.2"

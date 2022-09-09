@@ -18,8 +18,9 @@ class ImportOf:
 
     """
 
-    def __init__(self, path: DotPath):
+    def __init__(self, path: DotPath, *, absolute: bool | None = None):
         self._import_path = path
+        self._absolute = absolute
 
     def __str__(self) -> str:
         return f'import of {self._import_path}'
@@ -32,9 +33,15 @@ class ImportOf:
     def import_path(self) -> DotPath:
         return self._import_path
 
+    @property
+    def absolute(self) -> bool | None:
+        return self._absolute
+
     @classmethod
-    def from_str_path(cls, dot_path: str) -> 'ImportOf':
-        return cls(DotPath(dot_path))
+    def from_str_path(
+        cls, dot_path: str, *, absolute: bool | None = None
+    ) -> 'ImportOf':
+        return cls(DotPath(dot_path), absolute=absolute)
 
 
 class ModulesAt:
@@ -60,7 +67,11 @@ class ModulesAt:
         for module_node in self._base_node.walk():
             for import_by in module_node.imports:
                 if import_by.import_path.is_relative_to(import_of_path):
-                    return True
+                    if (
+                        import_of.absolute is None
+                        or import_of.absolute != bool(import_by.level)
+                    ):
+                        return True
         return False
 
     def explain_contains_false(self, import_of: ImportOf) -> list[str]:
@@ -90,6 +101,3 @@ class ModulesAt:
     def __repr__(self) -> str:
         # pytest uses repr for the explanation of failed assertions
         return str(self)
-
-    # TODO: implement "except" (return new instance of ModulesAt)
-    #  e.g. modules_at('bobbytime.models').except('repository')

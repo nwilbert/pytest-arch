@@ -40,6 +40,9 @@ def arch_project_paths(pytestconfig: pytest.Config) -> Sequence[Path]:
     # Note: pytest already converts relative to absolute paths
     paths = pytestconfig.getini(INI_NAME)
     if not paths:
+        # TODO: raise error, to avoid confusion?
+        # Note: rootpath is only picked correctly
+        #   if pytest finds actual config for pytest.
         paths = [pytestconfig.rootpath]
     return paths  # type: ignore[no-any-return]
 

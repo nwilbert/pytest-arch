@@ -15,17 +15,17 @@ from pyarch.parser import build_import_model
                 'a': {'b.py': 'from .. import y'},
             },
             'a.b',
-            ImportInModule(import_path=DotPath('y'), line_no=1),
+            ImportInModule(import_path=DotPath('y'), line_no=1, level=2),
         ),
         (
             {'a': {'b': {'c.py': '...\nfrom .. import y'}}},
             'a.b.c',
-            ImportInModule(import_path=DotPath('a.y'), line_no=2),
+            ImportInModule(import_path=DotPath('a.y'), line_no=2, level=2),
         ),
         (
             {'a': {'b.py': '...\n\nfrom .x import y'}},
             'a.b',
-            ImportInModule(import_path=DotPath('a.x.y'), line_no=3),
+            ImportInModule(import_path=DotPath('a.x.y'), line_no=3, level=1),
         ),
     ],
 )
@@ -126,3 +126,19 @@ def test_project_structure_nodes(project_path: Path):
     )
     assert len(node.get(DotPath('x.y')).imports) == 3
     assert node.get(DotPath('x.y'))._file_path == project_path / 'x' / 'y.py'
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
+            'a': {'b.py': 'import x', '.d': {'c.py': 'import x'}},
+            '.m.py': 'import y',
+        }
+    ],
+)
+def test_hidden_dirs_and_files_are_excluded(project_path: Path):
+    node = build_import_model(project_path)
+    assert node.get(DotPath('a.b'))
+    assert len(node.get(DotPath('a'))._children) == 1
+    assert len(node._children) == 1
