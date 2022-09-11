@@ -96,6 +96,17 @@ def test_dotpath_truediv():
     assert 'a' / DotPath('b') == DotPath('a.b')
 
 
+def test_dotpath_hash():
+    assert hash(DotPath('a')) != hash(DotPath('b'))
+    assert hash(DotPath('a.b')) == hash(DotPath('a.b'))
+    assert hash(DotPath('a.b')) != hash(DotPath('a.c'))
+
+
+def test_dotpath_hash_stable():
+    dp = DotPath('a.b')
+    assert hash(dp) == hash(dp)
+
+
 @pytest.fixture
 def tree_base_node():
     base_node = RootNode()
@@ -183,3 +194,30 @@ def test_node_walk():
     visited = [node.name for node in base_node.walk()]
     assert len(visited) == 5
     assert set(visited) == {'base', 'a', 'c', 'b', 'x'}
+
+
+@pytest.mark.parametrize(
+    'exclude, visited',
+    [
+        ([], {'r', 'a', 'b', 'c', 'd'}),
+        ([''], {'r', 'a', 'b', 'c', 'd'}),
+        (['r'], {'r', 'a', 'b', 'c', 'd'}),
+        (['b'], {'r', 'a', 'b', 'c', 'd'}),
+        (['d'], {'r', 'a', 'b', 'c', 'd'}),
+        (['x'], {'r', 'a', 'b', 'c', 'd'}),
+        (['a'], {'r'}),
+        (['a', 'a'], {'r'}),
+        (['a.b'], {'r', 'a', 'd'}),
+        (['a.b', 'a'], {'r'}),
+        (['a.b', 'a.d'], {'r', 'a'}),
+        (['a.b', 'a.d', 'x.y'], {'r', 'a'}),
+    ],
+)
+def test_node_walk_exclude(exclude, visited):
+    base_node = ModuleNode('r', Path())
+    base_node.get_or_add(DotPath('a.b.c'), Path())
+    base_node.get_or_add(DotPath('a.d'), Path())
+    assert {
+        node.name
+        for node in base_node.walk(exclude=[DotPath(p) for p in exclude])
+    } == visited

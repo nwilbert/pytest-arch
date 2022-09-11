@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Iterable, Optional, Sequence
 
 import pytest
 
@@ -57,11 +57,18 @@ def arch_root_node(arch_project_paths: Sequence[Path]) -> RootNode:
 
 @pytest.fixture
 def modules_at(arch_root_node: RootNode) -> Callable[[str], ModulesAt]:
-    def _create_modules_at(path: str) -> ModulesAt:
+    def _create_modules_at(
+        path: str, *, exclude: Optional[Iterable[str]] = None
+    ) -> ModulesAt:
         node = arch_root_node.get(DotPath(path))
         if not node:
             raise KeyError(f'Found no node for path {path} in project.')
-        return ModulesAt(node)
+        if isinstance(exclude, str):
+            raise TypeError(
+                f'Value "{exclude}" for exclude argument is of type str, '
+                f'but should be an iterable (like ["{exclude}"]).'
+            )
+        return ModulesAt(node, exclude=[DotPath(e) for e in exclude or []])
 
     return _create_modules_at
 

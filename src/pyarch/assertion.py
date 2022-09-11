@@ -1,3 +1,5 @@
+from typing import Iterable, Optional
+
 from .model import DotPath, ModuleNode
 
 
@@ -39,7 +41,7 @@ class ImportOf:
 
     @classmethod
     def from_str_path(
-        cls, dot_path: str, *, absolute: bool | None = None
+        cls, dot_path: str, absolute: bool | None = None
     ) -> 'ImportOf':
         return cls(DotPath(dot_path), absolute=absolute)
 
@@ -52,8 +54,13 @@ class ModulesAt:
     does or does not contain certain imports.
     """
 
-    def __init__(self, base_node: ModuleNode):
+    def __init__(
+        self,
+        base_node: ModuleNode,
+        exclude: Optional[Iterable[DotPath]] = None,
+    ):
         self._base_node = base_node
+        self._exclude = exclude or []
 
     def __contains__(self, import_of: ImportOf) -> bool:
         """
@@ -64,7 +71,7 @@ class ModulesAt:
         of 'a.b.c' would be reported as well, but not an import of 'a'.
         """
         import_of_path = import_of.import_path
-        for module_node in self._base_node.walk():
+        for module_node in self._base_node.walk(exclude=self._exclude):
             for import_by in module_node.imports:
                 if import_by.import_path.is_relative_to(import_of_path):
                     if (

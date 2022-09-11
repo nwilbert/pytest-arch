@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-arch"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Niko Wilbert <niko.wilbert@tngtech.com>"]
 classifiers = ["Framework :: Pytest"]

@@ -49,7 +49,7 @@ def test_relative_import_assertion(modules_at, import_of):
         }
     ],
 )
-def test_absolute_import_flag(modules_at, import_of):
+def test_import_absolute_argument(modules_at, import_of):
     assert import_of('a') in modules_at('a.b')
     assert import_of('a.x') in modules_at('a.b')
     assert import_of('a.x.y') in modules_at('a.b')
@@ -67,3 +67,34 @@ def test_absolute_import_flag(modules_at, import_of):
     assert import_of('x.y') in modules_at('a.d')
     assert import_of('x.y', absolute=True) in modules_at('a.d')
     assert import_of('x.y', absolute=False) not in modules_at('a.d')
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
+            'r': {
+                'a.py': 'import x',
+                'b.py': """
+                    import x
+                    import y
+                """,
+            },
+        }
+    ],
+)
+def test_modules_except_argument(modules_at, import_of):
+    assert import_of('y') in modules_at('r')
+    assert import_of('y') not in modules_at('r', exclude=['b'])
+    assert import_of('x') in modules_at('r', exclude=['b'])
+    assert import_of('x') not in modules_at('r', exclude=['a', 'b'])
+    assert import_of('y') not in modules_at('r', exclude=['a', 'b'])
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [{'r': {'a.py': 'import x'}}],
+)
+def test_module_except_argument_wrong_type(modules_at, import_of):
+    with pytest.raises(TypeError):
+        modules_at('r', exclude='a')
