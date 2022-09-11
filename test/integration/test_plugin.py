@@ -52,9 +52,9 @@ def test_simple_project(pytester):
     pytester.makepyfile(foobar='from foo import bar')
     pytester.makepyfile(
         """
-        def test_arch(import_of, modules_at):
-            assert import_of('foo.bar') in modules_at('foobar')
-            assert import_of('fiz') not in modules_at('foobar')
+        def test_arch(arch):
+            assert arch.import_of('foo.bar') in arch.modules_at('foobar')
+            assert arch.import_of('fiz') not in arch.modules_at('foobar')
     """
     )
     result = pytester.runpytest()
@@ -66,8 +66,8 @@ def test_explain_contains_fail(pytester):
     pytester.makepyfile(foo='import fizz')
     pytester.makepyfile(
         """
-        def test_arch(import_of, modules_at):
-            assert import_of('bar') in modules_at('foo')
+        def test_arch(arch):
+            assert arch.import_of('bar') in arch.modules_at('foo')
     """
     )
     result = pytester.runpytest()
@@ -88,8 +88,8 @@ def test_explain_not_contains_fail(pytester):
     )
     pytester.makepyfile(
         """
-        def test_arch(import_of, modules_at):
-            assert import_of('foo.bar') not in modules_at('foobar')
+        def test_arch(arch):
+            assert arch.import_of('foo.bar') not in arch.modules_at('foobar')
     """
     )
     result = pytester.runpytest()

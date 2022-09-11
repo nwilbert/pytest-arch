@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Sequence
+from typing import Any, Iterable, Optional, Sequence
 
 import pytest
 
@@ -55,12 +55,14 @@ def arch_root_node(arch_project_paths: Sequence[Path]) -> RootNode:
     return build_import_model(arch_project_paths[0])
 
 
-@pytest.fixture
-def modules_at(arch_root_node: RootNode) -> Callable[[str], ModulesAt]:
-    def _create_modules_at(
-        path: str, *, exclude: Optional[Iterable[str]] = None
+class ArchFixture:
+    def __init__(self, arch_root_node: RootNode):
+        self._root_node = arch_root_node
+
+    def modules_at(
+        self, path: str, *, exclude: Optional[Iterable[str]] = None
     ) -> ModulesAt:
-        node = arch_root_node.get(DotPath(path))
+        node = self._root_node.get(DotPath(path))
         if not node:
             raise KeyError(f'Found no node for path {path} in project.')
         if isinstance(exclude, str):
@@ -70,9 +72,11 @@ def modules_at(arch_root_node: RootNode) -> Callable[[str], ModulesAt]:
             )
         return ModulesAt(node, exclude=[DotPath(e) for e in exclude or []])
 
-    return _create_modules_at
+    @staticmethod
+    def import_of(dot_path: str, *, absolute: bool | None = None) -> ImportOf:
+        return ImportOf(DotPath(dot_path), absolute=absolute)
 
 
 @pytest.fixture
-def import_of() -> Callable[[str], ImportOf]:
-    return ImportOf.from_str_path
+def arch(arch_root_node: RootNode) -> ArchFixture:
+    return ArchFixture(arch_root_node)

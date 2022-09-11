@@ -39,12 +39,6 @@ class ImportOf:
     def absolute(self) -> bool | None:
         return self._absolute
 
-    @classmethod
-    def from_str_path(
-        cls, dot_path: str, absolute: bool | None = None
-    ) -> 'ImportOf':
-        return cls(DotPath(dot_path), absolute=absolute)
-
 
 class ModulesAt:
     """
