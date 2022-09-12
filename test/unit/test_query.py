@@ -1,7 +1,7 @@
 import pytest
 
-from pyarch.assertion import ImportOf, ModulesAt
 from pyarch.model import DotPath
+from pyarch.query import ImportOf, ModulesAt
 
 
 @pytest.mark.parametrize(

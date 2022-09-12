@@ -4,9 +4,9 @@ from typing import Any, Iterable, Optional, Sequence
 
 import pytest
 
-from .assertion import ImportOf, ModulesAt
 from .model import DotPath, RootNode
 from .parser import build_import_model
+from .query import ImportOf, ModulesAt
 
 log = logging.getLogger(__name__)
 
