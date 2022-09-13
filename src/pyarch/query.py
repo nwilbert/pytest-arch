@@ -1,6 +1,6 @@
-from typing import Iterable, Optional
+from typing import Iterable, Iterator, Optional, Tuple
 
-from .model import DotPath, ModuleNode
+from .model import DotPath, ImportInModule, ModuleNode
 
 
 class ImportOf:
@@ -64,6 +64,32 @@ class ModulesAt:
         Example: If the given import path is 'a.b' then an import
         of 'a.b.c' would be reported as well, but not an import of 'a'.
         """
+        return next(self._matching_imports(import_of), None) is not None
+
+    def __str__(self) -> str:
+        return f'modules at {self._base_node.file_path}'
+
+    def __repr__(self) -> str:
+        # pytest uses repr for the explanation of failed assertions
+        return str(self)
+
+    def explain_why_contains_is_false(self, import_of: ImportOf) -> list[str]:
+        return [
+            f'no matching import in module {module_node.file_path}'
+            for module_node in self._base_node.walk(exclude=self._exclude)
+            if module_node.file_path.suffix == '.py'
+        ]
+
+    def explain_why_contains_is_true(self, import_of: ImportOf) -> list[str]:
+        return [
+            f'found import of {import_of.import_path} in module '
+            f'{module_node.file_path}:{import_by.line_no}'
+            for module_node, import_by in self._matching_imports(import_of)
+        ]
+
+    def _matching_imports(
+        self, import_of: ImportOf
+    ) -> Iterator[Tuple[ModuleNode, ImportInModule]]:
         import_of_path = import_of.import_path
         for module_node in self._base_node.walk(exclude=self._exclude):
             for import_by in module_node.imports:
@@ -72,33 +98,4 @@ class ModulesAt:
                         import_of.absolute is None
                         or import_of.absolute != bool(import_by.level)
                     ):
-                        return True
-        return False
-
-    def explain_contains_false(self, import_of: ImportOf) -> list[str]:
-        assert import_of not in self
-        return [
-            f'no matching import in module {module_node.file_path}'
-            for module_node in self._base_node.walk()
-            if module_node.file_path.suffix == '.py'
-        ]
-
-    def explain_not_contains_false(self, import_of: ImportOf) -> list[str]:
-        import_of_path = import_of.import_path
-        explanations: list[str] = []
-        for module_node in self._base_node.walk():
-            for import_by in module_node.imports:
-                if import_by.import_path.is_relative_to(import_of_path):
-                    explanations.append(
-                        f'found import of {import_of.import_path} in module '
-                        f'{module_node.file_path}:{import_by.line_no}'
-                    )
-        assert explanations
-        return explanations
-
-    def __str__(self) -> str:
-        return f'modules at {self._base_node.file_path}'
-
-    def __repr__(self) -> str:
-        # pytest uses repr for the explanation of failed assertions
-        return str(self)
+                        yield module_node, import_by

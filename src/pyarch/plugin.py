@@ -29,10 +29,14 @@ def pytest_assertrepr_compare(
     match op, left, right:
         case 'not in', ImportOf() as import_of, ModulesAt() as package:
             first_line = f'{left} {op} {right}'
-            return [first_line] + package.explain_not_contains_false(import_of)
+            return [first_line] + package.explain_why_contains_is_true(
+                import_of
+            )
         case 'in', ImportOf() as import_of, ModulesAt() as package:
             first_line = f'{left} {op} {right}'
-            return [first_line] + package.explain_contains_false(import_of)
+            return [first_line] + package.explain_why_contains_is_false(
+                import_of
+            )
     return None
 
 
