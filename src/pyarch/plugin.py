@@ -92,6 +92,13 @@ class ArchFixture:
     def modules_at(
         self, path: str, *, exclude: Optional[Iterable[str]] = None
     ) -> ModulesAt:
+        """
+        Return object representing the module tree for the given path.
+
+        It supports the operators `in` and `not in` to check if it does
+        or does not contain certain imports.
+        """
+
         node = self._root_node.get(DotPath(path))
         if not node:
             raise KeyError(f'Found no node for path {path} in project.')
@@ -104,6 +111,20 @@ class ArchFixture:
 
     @staticmethod
     def import_of(dot_path: str, *, absolute: bool | None = None) -> ImportOf:
+        """
+        Returns object representing an import of something from a module.
+
+        This includes imports of child elements. So 'a.b' would also match
+        imports of 'a.b.c'.
+
+        On the other hand, it does not cover imports of parent. So 'a.b' would
+        not match imports of 'a'.
+
+        Note that the use of 'a.b' in the following example can't be expressed:
+            import a
+            ...
+            a.b()
+        """
         return ImportOf(DotPath(dot_path), absolute=absolute)
 
 

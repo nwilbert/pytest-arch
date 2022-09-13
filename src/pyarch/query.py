@@ -4,21 +4,7 @@ from .model import DotPath, ImportInModule, ModuleNode
 
 
 class ImportOf:
-    """
-    Represents a single import of something from a module.
-
-    This includes imports of child elements.
-    So a.b would also match imports of a.b.c.
-
-    On the other hand, it does not cover imports of parent.
-    So a.b would not match imports of a.
-
-    Note that this means that the following case can't be expressed:
-        import a
-        ...
-        a.b()
-
-    """
+    """Represents a single import of something from a module."""
 
     def __init__(self, path: DotPath, *, absolute: bool | None = None):
         self._import_path = path
@@ -41,12 +27,7 @@ class ImportOf:
 
 
 class ModulesAt:
-    """
-    Represents a module with its imports.
-
-    Via the contains magic method you can check if it
-    does or does not contain certain imports.
-    """
+    """Represents a module tree with its imports."""
 
     def __init__(
         self,
