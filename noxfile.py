@@ -1,10 +1,20 @@
+import webbrowser
+from pathlib import Path
+
 import nox
 from nox_poetry import session
 
 src_path = 'src'
 code_paths = [src_path, 'test', 'noxfile.py']
 
-nox.options.sessions = ['blue', 'isort', 'flake8', 'mypy', 'pytest']
+nox.options.sessions = [
+    'blue',
+    'isort',
+    'flake8',
+    'mypy',
+    'pytest',
+    'coverage',
+]
 
 
 @session
@@ -35,3 +45,22 @@ def mypy(session):
 def pytest(session):
     session.install('pytest', 'pytest-mock', '.')
     session.run('pytest')
+
+
+@session
+def coverage(session):
+    session.install('pytest', 'pytest-mock', 'coverage', '.')
+    session.run(
+        'coverage',
+        'run',
+        '--source',
+        'pyarch',
+        '-m',
+        'pytest',
+        'test/integration',
+        'test/unit',
+    )
+    session.run('coverage', 'report', '--fail-under', '95', '--show-missing')
+    if 'html' in session.posargs:
+        session.run('coverage', 'html', '--skip-covered')
+        webbrowser.open((Path.cwd() / 'htmlcov' / 'index.html').as_uri())
