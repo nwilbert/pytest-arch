@@ -12,8 +12,6 @@ def build_import_model(base_path: Path) -> RootNode:
     root_node = RootNode()
     for module_path, module_content in _walk_modules(base_path):
         module_ast = ast.parse(module_content, str(module_path))
-        if not module_ast.body:
-            continue
         dot_path = DotPath.from_path(module_path.relative_to(base_path))
         node = root_node.get_or_add(dot_path, module_path)
         imports = _collect_imports(module_ast, dot_path)

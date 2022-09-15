@@ -32,6 +32,15 @@ def test_contains_nested(arch_root_node):
 
 @pytest.mark.parametrize(
     'project_structure',
+    [{'a.py': ''}],
+)
+def test_contains_with_wrong_type(arch):
+    with pytest.raises(NotImplementedError):
+        assert 42 in arch.modules_at('a')
+
+
+@pytest.mark.parametrize(
+    'project_structure',
     [{'d': {'a.py': 'import x', 'b.py': 'import y'}}],
 )
 def test_explain_contains_false(arch_root_node):

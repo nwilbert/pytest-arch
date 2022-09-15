@@ -35,11 +35,11 @@ def test_node_get_non_existend(tree_base_node):
 
 
 def test_node_get_root(tree_base_node):
-    with pytest.raises(Exception):
+    with pytest.raises(KeyError):
         assert tree_base_node.get(DotPath())
 
 
-def test_node_get_or_add_root():
+def test_node_get_or_add():
     root_node = RootNode()
     new_node = root_node.get_or_add(DotPath('a'), Path('a'))
     assert new_node.name == 'a'
@@ -55,6 +55,11 @@ def test_node_get_or_add_new_parent(tree_base_node):
     assert new_parent_node.name == 'a'
     assert new_parent_node.file_path == Path('1', 'a')
     assert new_parent_node.get(DotPath('b')).name == 'b'
+
+
+def test_node_get_or_add_root(tree_base_node):
+    with pytest.raises(KeyError):
+        assert tree_base_node.get_or_add(DotPath(), Path())
 
 
 def test_node_add_imports():

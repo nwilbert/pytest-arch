@@ -106,3 +106,18 @@ def test_project_path_from_heuristic_with_setup_py(pytester):
     )
     result = pytester.runpytest('--rootdir', pytester.path / 'root' / 'test')
     result.assert_outcomes(passed=1)
+
+
+def test_project_path_multiple_not_implemented(pytester):
+    pytester.makepyprojecttoml(
+        """
+        [tool.pytest.ini_options]
+        arch_project_paths = [
+            "foobar",
+            "/foo/bar"
+        ]
+    """
+    )
+    pytester.makepyfile('def test_arch(arch): pass')
+    result = pytester.runpytest()
+    result.assert_outcomes(errors=1)

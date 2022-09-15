@@ -98,3 +98,12 @@ def test_modules_exclude_argument(arch):
 def test_module_exclude_argument_wrong_type(arch):
     with pytest.raises(TypeError):
         arch.modules_at('r', exclude='a')
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [{'a.py': ''}],
+)
+def test_module_not_found(arch):
+    with pytest.raises(KeyError):
+        arch.modules_at('foobar')

@@ -60,7 +60,11 @@ def coverage(session):
         'test/integration',
         'test/unit',
     )
-    session.run('coverage', 'report', '--fail-under', '95', '--show-missing')
-    if 'html' in session.posargs:
-        session.run('coverage', 'html', '--skip-covered')
-        webbrowser.open((Path.cwd() / 'htmlcov' / 'index.html').as_uri())
+    try:
+        session.run(
+            'coverage', 'report', '--fail-under', '100', '--show-missing'
+        )
+    finally:
+        if 'html' in session.posargs:
+            session.run('coverage', 'html', '--skip-covered')
+            webbrowser.open((Path.cwd() / 'htmlcov' / 'index.html').as_uri())

@@ -162,3 +162,16 @@ def test_hidden_dirs_and_files_are_excluded(project_path: Path):
     assert node.get(DotPath('a.b'))
     assert len(node.get(DotPath('a'))._children) == 1
     assert len(node._children) == 1
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
+            'a.py': '',
+        }
+    ],
+)
+def test_empty_file(project_path):
+    base_node = build_import_model(project_path)
+    assert base_node.get(DotPath('a')).imports == []

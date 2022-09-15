@@ -90,6 +90,10 @@ def test_dotpath_equal():
     assert DotPath('ab.cd.e') != DotPath('ab.d.e')
 
 
+def test_dotpath_equal_other_type():
+    assert DotPath('ab.cd.e') != 42
+
+
 def test_dotpath_truediv():
     assert DotPath('a.b') / DotPath('c') == DotPath('a.b.c')
     assert DotPath('a') / 'b' == DotPath('a.b')

@@ -45,7 +45,9 @@ class ModulesAt:
         Example: If the given import path is 'a.b' then an import
         of 'a.b.c' would be reported as well, but not an import of 'a'.
         """
-        return next(self._matching_imports(import_of), None) is not None
+        if isinstance(import_of, ImportOf):
+            return next(self._matching_imports(import_of), None) is not None
+        raise NotImplementedError()
 
     def __str__(self) -> str:
         return f'modules at {self._base_node.file_path}'
