@@ -26,7 +26,7 @@ def _collect_imports(
     module_ast: ast.Module, node_path: DotPath
 ) -> Sequence[ImportInModule]:
     imports: list[ImportInModule] = []
-    for ast_node in module_ast.body:
+    for ast_node in ast.walk(module_ast):
         match ast_node:
             case ast.Import() as ast_import:
                 for alias in ast_import.names:

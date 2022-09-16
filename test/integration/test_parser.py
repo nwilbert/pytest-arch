@@ -115,6 +115,27 @@ def test_absolute_import(project_path: Path, path: DotPath, import_obj):
     'project_structure',
     [
         {
+            'a.py': """
+                try:
+                    import foo
+                except:
+                    import bar
+            """,
+        }
+    ],
+)
+def test_import_in_nested_block(project_path):
+    base_node = build_import_model(project_path)
+    assert base_node.get(DotPath('a')).imports == [
+        ImportInModule(import_path=DotPath('foo'), line_no=2),
+        ImportInModule(import_path=DotPath('bar'), line_no=4),
+    ]
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
             'a': {
                 'b.py': """
                     from .x import y
