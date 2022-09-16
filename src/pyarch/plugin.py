@@ -40,7 +40,7 @@ def pytest_assertrepr_compare(
     return None
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def arch_project_paths(pytestconfig: pytest.Config) -> Sequence[Path]:
     """
     Provides the project source code paths that are analyzed.
@@ -70,7 +70,7 @@ def arch_project_paths(pytestconfig: pytest.Config) -> Sequence[Path]:
     return [pytestconfig.rootpath]
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def arch_root_node(arch_project_paths: Sequence[Path]) -> RootNode:
     """
     Provides the root node of the tree of analyzed Python modules.
