@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "pytest-arch"
-version = "0.1.3"
-description = ""
-authors = ["Niko Wilbert <niko.wilbert@tngtech.com>"]
+version = "0.1.4"
+description = "A pythonic derivative of ArchUnit, in the form of a pytest plugin."
+license = "Apache-2.0"
+authors = ["Niko Wilbert <mail@nikowilbert.de>"]
 classifiers = ["Framework :: Pytest"]
 packages = [
     { include = "pyarch", from = "src" },
