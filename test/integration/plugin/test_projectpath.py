@@ -19,7 +19,10 @@ def test_project_path_from_toml_config(pytester):
         def test_arch(arch_project_paths, pytestconfig):
             assert len(arch_project_paths) == 2
             assert arch_project_paths[0] == pytestconfig.rootpath / 'foobar'
-            assert arch_project_paths[1] == Path('/foo/bar')
+            drive = ''
+            if arch_project_paths[1].drive:
+                drive = arch_project_paths[1].drive
+            assert arch_project_paths[1] == Path(f'{drive}/foo/bar')
     """
     )
     result = pytester.runpytest()
@@ -43,7 +46,10 @@ def test_project_path_from_ini_config(pytester):
         def test_arch(arch_project_paths, pytestconfig):
             assert len(arch_project_paths) == 2
             assert arch_project_paths[0] == pytestconfig.rootpath / 'foobar'
-            assert arch_project_paths[1] == Path('/foo/bar')
+            drive = ''
+            if arch_project_paths[1].drive:
+                drive = arch_project_paths[1].drive
+            assert arch_project_paths[1] == Path(f'{drive}/foo/bar')
 
     """
     )
@@ -62,7 +68,7 @@ def test_project_path_from_heuristic_with_src_dir(pytester):
             def test_path(arch_project_paths):
                 assert len(arch_project_paths) == 1
                 assert (str(arch_project_paths[0]) ==
-                    '{pytester.path / 'root' / 'src'}')
+                    r'{pytester.path / 'root' / 'src'}')
             """
         )
     )
@@ -80,7 +86,9 @@ def test_project_path_from_heuristic_with_nested_dirs(pytester):
             f"""
             def test_path(arch_project_paths):
                 assert len(arch_project_paths) == 1
-                assert str(arch_project_paths[0]) == '{pytester.path / 'root'}'
+                assert (
+                str(arch_project_paths[0]) == r'{pytester.path / 'root'}'
+                )
             """
         )
     )
@@ -100,7 +108,9 @@ def test_project_path_from_heuristic_with_setup_py(pytester):
             f"""
             def test_path(arch_project_paths):
                 assert len(arch_project_paths) == 1
-                assert str(arch_project_paths[0]) == '{pytester.path / 'root'}'
+                assert (
+                str(arch_project_paths[0]) == r'{pytester.path / 'root'}'
+                )
             """
         )
     )
