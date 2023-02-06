@@ -196,3 +196,41 @@ def test_hidden_dirs_and_files_are_excluded(project_path: Path):
 def test_empty_file(project_path):
     base_node = build_import_model(project_path)
     assert base_node.get(DotPath('a')).imports == []
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
+            'a.py': """
+                    import a
+                    def foo():
+                        import b
+                        pass
+                    import c
+                """,
+        }
+    ],
+)
+def test_function_level_import(project_path):
+    base_node = build_import_model(project_path)
+    assert base_node.get(DotPath('a')).imports == [
+        ImportInModule(
+            import_path=DotPath(('a',)),
+            line_no=1,
+            level=0,
+            function_import=False,
+        ),
+        ImportInModule(
+            import_path=DotPath(('b',)),
+            line_no=3,
+            level=0,
+            function_import=True,
+        ),
+        ImportInModule(
+            import_path=DotPath(('c',)),
+            line_no=5,
+            level=0,
+            function_import=False,
+        ),
+    ]

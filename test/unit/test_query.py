@@ -1,7 +1,7 @@
 import pytest
 
 from pyarch.model import DotPath
-from pyarch.query import ImportOf, ModulesAt
+from pyarch.query import FunctionLevelImport, ImportOf, ModulesAt
 
 
 @pytest.mark.parametrize(
@@ -136,3 +136,36 @@ def test_explain_contains_false_with_exclude(arch_root_node):
     )
     assert len(lines) == 1
     assert 'a.py' in lines[0]
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {'a.py': """import x""", 'b.py': 'import x'},
+    ],
+)
+def test_explain_function_contains_false(arch_root_node):
+    r = arch_root_node.get(DotPath('a'))
+    lines = ModulesAt(r).explain_why_function_level_contains_is_false()
+    assert False
+
+
+@pytest.mark.parametrize(
+    'project_structure',
+    [
+        {
+            'a.py': """
+                        import x
+                        def foo():
+                            import y
+                        """,
+            'b.py': 'import x',
+        },
+    ],
+)
+def test_function_level_import(arch_root_node):
+    a = arch_root_node.get(DotPath('a'))
+    b = arch_root_node.get(DotPath('b'))
+    assert FunctionLevelImport() in ModulesAt(a)
+    assert ImportOf(DotPath('y')) in ModulesAt(a)
+    assert FunctionLevelImport() not in ModulesAt(b)

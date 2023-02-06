@@ -26,3 +26,7 @@ def test_external_dependencies(arch):
     assert arch.import_of('pytest') not in arch.modules_at(
         'pyarch', exclude=['plugin']
     )
+
+
+def test_functional_import(arch):
+    assert arch.function_level_import() not in arch.modules_at('pyarch.plugin')

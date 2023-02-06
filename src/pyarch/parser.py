@@ -23,44 +23,77 @@ def build_import_model(base_path: Path) -> RootNode:
 
 
 def _collect_imports(
-    module_ast: ast.Module, node_path: DotPath
+    module_ast: ast.AST, node_path: DotPath, *, in_function: bool = False
 ) -> Sequence[ImportInModule]:
     imports: list[ImportInModule] = []
-    for ast_node in ast.walk(module_ast):
+    for ast_node in ast.iter_child_nodes(module_ast):
         match ast_node:
             case ast.Import() as ast_import:
-                for alias in ast_import.names:
-                    imports.append(
-                        ImportInModule(
-                            import_path=DotPath(alias.name),
-                            line_no=alias.lineno,
-                        )
-                    )
+                imports.extend(
+                    _convert_import(ast_import, function_import=in_function)
+                )
             case ast.ImportFrom() as ast_import_from:
-                for alias in ast_import_from.names:
-                    if ast_import_from.module:
-                        from_path = DotPath(ast_import_from.module)
-                    else:
-                        from_path = DotPath()
-                    if (level := ast_import_from.level) > 0:
-                        if level > len(node_path.parts):
-                            log.warning(
-                                f'Skipping import from {node_path} because '
-                                f'relative import level goes beyond project.'
-                            )
-                            continue
-                        else:
-                            from_path = (
-                                DotPath(node_path.parts[:-level]) / from_path
-                            )
-                    from_path /= alias.name
-                    imports.append(
-                        ImportInModule(
-                            import_path=from_path,
-                            line_no=alias.lineno,
-                            level=ast_import_from.level,
-                        )
+                imports.extend(
+                    _convert_import_from(
+                        ast_import_from, node_path, function_import=in_function
                     )
+                )
+            case ast.FunctionDef() as ast_function_def:
+                imports.extend(
+                    _collect_imports(
+                        ast_function_def, node_path, in_function=True
+                    )
+                )
+            case _:
+                imports.extend(_collect_imports(ast_node, node_path))
+    return imports
+
+
+def _convert_import(
+    ast_import: ast.Import, *, function_import: bool = False
+) -> Sequence[ImportInModule]:
+    imports = []
+    for alias in ast_import.names:
+        imports.append(
+            ImportInModule(
+                import_path=DotPath(alias.name),
+                line_no=alias.lineno,
+                function_import=function_import,
+            )
+        )
+    return imports
+
+
+def _convert_import_from(
+    ast_import_from: ast.ImportFrom,
+    node_path: DotPath,
+    *,
+    function_import: bool = False,
+) -> Sequence[ImportInModule]:
+    imports = []
+    for alias in ast_import_from.names:
+        if ast_import_from.module:
+            from_path = DotPath(ast_import_from.module)
+        else:
+            from_path = DotPath()
+        if (level := ast_import_from.level) > 0:
+            if level > len(node_path.parts):
+                log.warning(
+                    f'Skipping import from {node_path} because '
+                    f'relative import level goes beyond project.'
+                )
+                continue
+            else:
+                from_path = DotPath(node_path.parts[:-level]) / from_path
+        from_path /= alias.name
+        imports.append(
+            ImportInModule(
+                import_path=from_path,
+                line_no=alias.lineno,
+                level=ast_import_from.level,
+                function_import=function_import,
+            )
+        )
     return imports
 
 

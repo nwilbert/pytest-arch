@@ -83,6 +83,7 @@ class ImportInModule:
     import_path: DotPath
     line_no: int
     level: int = 0
+    function_import: bool = False
 
 
 class RootNode:

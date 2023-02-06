@@ -93,6 +93,28 @@ def test_modules_exclude_argument(arch):
 
 @pytest.mark.parametrize(
     'project_structure',
+    [
+        {
+            'a.py': """
+                    def foo(baz):
+                        from z import y
+                    """,
+            'b.py': """
+                    import x
+                    def foo(baz):
+                        pass
+                    """,
+        }
+    ],
+)
+def test_function_level_import(arch):
+    assert arch.function_level_import() in arch.modules_at('a')
+    assert arch.import_of('z.y') in arch.modules_at('a')
+    assert arch.function_level_import() not in arch.modules_at('b')
+
+
+@pytest.mark.parametrize(
+    'project_structure',
     [{'r': {'a.py': 'import x'}}],
 )
 def test_module_exclude_argument_wrong_type(arch):

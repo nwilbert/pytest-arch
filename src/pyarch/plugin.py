@@ -6,7 +6,7 @@ import pytest
 
 from .model import DotPath, RootNode
 from .parser import build_import_model
-from .query import ImportOf, ModulesAt
+from .query import FunctionLevelImport, ImportOf, ModulesAt
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +37,16 @@ def pytest_assertrepr_compare(
             return [first_line] + package.explain_why_contains_is_false(
                 import_of
             )
+        case 'not in', FunctionLevelImport(), ModulesAt() as package:
+            first_line = f'{left} {op} {right}'
+            return [
+                first_line
+            ] + package.explain_why_function_level_contains_is_true()
+        case 'in', FunctionLevelImport(), ModulesAt() as package:
+            first_line = f'{left} {op} {right}'
+            return [
+                first_line
+            ] + package.explain_why_function_level_contains_is_false()
     return None
 
 
@@ -126,6 +136,10 @@ class ArchFixture:
             a.b()
         """
         return ImportOf(DotPath(dot_path), absolute=absolute)
+
+    @staticmethod
+    def function_level_import() -> FunctionLevelImport:
+        return FunctionLevelImport()
 
 
 @pytest.fixture
