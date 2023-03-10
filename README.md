@@ -14,6 +14,9 @@ def test_import(arch):
 ```
 This will check that module `foo` is imported in module `bar`.
 
+Both `import_of` and `modules_at` are inclusive with regards to substructures
+(i.e., if there is an import of `foo.foo2` in a subpackage `bar.bar2` then the assertion is true).
+
 ### Installation & use
 
 Install `pytest-arch` via the Python package manager of your choice (e.g., pip or poetry).
@@ -21,11 +24,14 @@ Install `pytest-arch` via the Python package manager of your choice (e.g., pip o
 If your project structure is "normal" then you can simply start using the `arch` fixture in your tests right away, as seen above. 
 
 ### Complex examples
+Imports in tests are always specified like absolute imports (i.e., fully qualified).
+
 ```python
 def test_import_subpackage(arch):
     assert arch.import_of('fizz.buzz') not in arch.modules_at('foo.bar')
 ``` 
 Checks that module `buzz` in package `fizz` is not imported in module `bar` of package `foo`. Note that the dot `.` is used as path separator (other path separators like `/` are not supported).
+
     
 ```python
 def test_import_complex(arch):
