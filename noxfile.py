@@ -41,7 +41,7 @@ def mypy(session):
     session.run('mypy', src_path)
 
 
-@session
+@session(python=['3.10', '3.11'])
 def pytest(session):
     session.install('pytest', 'pytest-mock', '.')
     session.run('pytest')
