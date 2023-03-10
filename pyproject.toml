@@ -14,16 +14,16 @@ arch = "pyarch.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pytest = "^7.1.3"
+pytest = "^7.2.2"
 
 [tool.poetry.group.dev.dependencies]
-nox = "^2022.8.7"
-nox-poetry = "^1.0.1"
+nox = "^2022.11.21"
+nox-poetry = "^1.0.2"
 flake8 = "~4.0.1" # 5.0.4 is incompatible with blue
-mypy = "^0.971"
+mypy = "^1.1.1"
 blue = "^0.9.1"
-pytest-mock = "^3.8.2"
-coverage = "^6.4.4"
+pytest-mock = "^3.10.0"
+coverage = "^7.2.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
