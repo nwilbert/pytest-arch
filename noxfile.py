@@ -63,3 +63,9 @@ def coverage(session):
         if 'html' in session.posargs:
             session.run('coverage', 'html', '--skip-covered')
             webbrowser.open((Path.cwd() / 'htmlcov' / 'index.html').as_uri())
+
+
+@nox.session
+def audit(session: nox.Session) -> None:
+    _sync(session, 'audit')
+    session.run('pip-audit', '--local')
