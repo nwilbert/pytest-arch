@@ -1,83 +1,71 @@
-from collections.abc import Iterable, Iterator
+from __future__ import annotations
+
+from collections.abc import Iterator
+from dataclasses import dataclass
+from typing import Literal
 
 from .model import DotPath, ImportInModule, ModuleNode
 
 
-class ImportOf:
-    """Represents a single import of something from a module."""
+@dataclass(frozen=True)
+class Scope:
+    """A module scope (package or module) to be checked for imports."""
 
-    def __init__(self, path: DotPath, *, absolute: bool | None = None):
-        self._import_path = path
-        self._absolute = absolute
-
-    def __str__(self) -> str:
-        return f'import of {self._import_path}'
-
-    def __repr__(self) -> str:
-        # pytest uses repr for the explanation of failed assertions
-        return str(self)
-
-    @property
-    def import_path(self) -> DotPath:
-        return self._import_path
-
-    @property
-    def absolute(self) -> bool | None:
-        return self._absolute
+    path: str
+    without: tuple[str, ...] = ()
 
 
-class ModulesAt:
-    """Represents a module tree with its imports."""
+def scope(path: str, *, without: str | list[str] | None = None) -> Scope:
+    if isinstance(without, str):
+        without = [without]
+    return Scope(path=path, without=tuple(without or []))
 
-    def __init__(
-        self,
-        base_node: ModuleNode,
-        exclude: Iterable[DotPath] | None = None,
-    ):
-        self._base_node = base_node
-        self._exclude = exclude or []
 
-    def __contains__(self, import_of: ImportOf) -> bool:
-        """
-        Checks if the given import path or any sub-path is imported anywhere
-        in this package.
+@dataclass(frozen=True)
+class CanImport:
+    """Predicate asserting that a scope must contain a given import."""
 
-        Example: If the given import path is 'a.b' then an import
-        of 'a.b.c' would be reported as well, but not an import of 'a'.
-        """
-        if isinstance(import_of, ImportOf):
-            return next(self._matching_imports(import_of), None) is not None
-        raise NotImplementedError()
+    path: str
+    via: Literal['absolute', 'relative'] | None = None
 
-    def __str__(self) -> str:
-        return f'modules at {self._base_node.file_path}'
 
-    def __repr__(self) -> str:
-        # pytest uses repr for the explanation of failed assertions
-        return str(self)
+def can_import(
+    path: str, *, via: Literal['absolute', 'relative'] | None = None
+) -> CanImport:
+    return CanImport(path=path, via=via)
 
-    def explain_why_contains_is_false(self, import_of: ImportOf) -> list[str]:
-        return [
-            f'no matching import in module {module_node.file_path}'
-            for module_node in self._base_node.walk(exclude=self._exclude)
-            if module_node.file_path.suffix == '.py'
-        ]
 
-    def explain_why_contains_is_true(self, import_of: ImportOf) -> list[str]:
-        return [
-            f'found import of {import_of.import_path} in module '
-            f'{module_node.file_path}:{import_by.line_no}'
-            for module_node, import_by in self._matching_imports(import_of)
-        ]
+@dataclass(frozen=True)
+class MustNotImport:
+    """Predicate asserting that a scope must not contain a given import."""
 
-    def _matching_imports(
-        self, import_of: ImportOf
-    ) -> Iterator[tuple[ModuleNode, ImportInModule]]:
-        import_of_path = import_of.import_path
-        for module_node in self._base_node.walk(exclude=self._exclude):
-            for import_by in module_node.imports:
-                if import_by.import_path.is_relative_to(import_of_path):
-                    if import_of.absolute is None or import_of.absolute != bool(
-                        import_by.level
-                    ):
-                        yield module_node, import_by
+    path: str
+    via: Literal['absolute', 'relative'] | None = None
+
+
+def must_not_import(
+    path: str, *, via: Literal['absolute', 'relative'] | None = None
+) -> MustNotImport:
+    return MustNotImport(path=path, via=via)
+
+
+def _find_matching_imports(
+    base_node: ModuleNode,
+    exclude: list[DotPath],
+    import_path: DotPath,
+    via: Literal['absolute', 'relative'] | None,
+) -> Iterator[tuple[ModuleNode, ImportInModule]]:
+    absolute = _via_to_absolute(via)
+    for module_node in base_node.walk(exclude=exclude):
+        for import_by in module_node.imports:
+            if import_by.import_path.is_relative_to(import_path):
+                if absolute is None or absolute != bool(import_by.level):
+                    yield module_node, import_by
+
+
+def _via_to_absolute(via: Literal['absolute', 'relative'] | None) -> bool | None:
+    if via == 'absolute':
+        return True
+    if via == 'relative':
+        return False
+    return None

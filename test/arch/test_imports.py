@@ -1,22 +1,33 @@
+from pyarch import can_import, must_not_import, scope
+
+
 def test_internal_dependencies(arch):
-    assert arch.import_of('pyarch.parser') not in arch.modules_at(
-        'pyarch', exclude=['plugin']
+    arch.check(
+        {
+            scope('pyarch', without='plugin'): [
+                must_not_import('pyarch.parser'),
+                must_not_import('pyarch.query'),
+                must_not_import('pyarch.plugin'),
+            ],
+            'pyarch.plugin': can_import('pyarch.model'),
+            'pyarch.query': can_import('pyarch.model'),
+            'pyarch.parser': can_import('pyarch.model'),
+        }
     )
-    assert arch.import_of('pyarch.query') not in arch.modules_at(
-        'pyarch', exclude=['plugin']
-    )
-    assert arch.import_of('pyarch.plugin') not in arch.modules_at(
-        'pyarch', exclude=['plugin']
-    )
-    assert arch.import_of('pyarch.model') in arch.modules_at('pyarch.plugin')
-    assert arch.import_of('pyarch.model') in arch.modules_at('pyarch.query')
-    assert arch.import_of('pyarch.model') in arch.modules_at('pyarch.parser')
 
 
 def test_all_internal_imports_must_be_relative(arch):
-    assert arch.import_of('pyarch', absolute=True) not in arch.modules_at('pyarch')
+    arch.check(
+        {
+            scope('pyarch'): must_not_import('pyarch', via='absolute'),
+        }
+    )
 
 
 def test_external_dependencies(arch):
-    assert arch.import_of('ast') not in arch.modules_at('pyarch', exclude=['parser'])
-    assert arch.import_of('pytest') not in arch.modules_at('pyarch', exclude=['plugin'])
+    arch.check(
+        {
+            scope('pyarch', without='parser'): must_not_import('ast'),
+            scope('pyarch', without='plugin'): must_not_import('pytest'),
+        }
+    )

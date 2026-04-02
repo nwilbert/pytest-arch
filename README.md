@@ -9,46 +9,65 @@ For now, this plugin covers import statements in your Python code. This enables 
 
 ### Simple example
 ```python
-def test_import(arch):
-    assert arch.import_of('foo') in arch.modules_at('bar')
-```
-This will check that module `foo` is imported in module `bar`.
+from pyarch import can_import, must_not_import
 
-Both `import_of` and `modules_at` are inclusive with regards to substructures
-(i.e., if there is an import of `foo.foo2` in a subpackage `bar.bar2` then the assertion is true).
+def test_imports(arch):
+    arch.check({
+        'foo': can_import('bar'),
+        'baz': must_not_import('qux'),
+    })
+```
+This checks that module `foo` imports `bar`, and that module `baz` does not import `qux`.
+
+Both `can_import` and `must_not_import` are inclusive with regards to substructures
+(i.e., if there is an import of `foo.foo2` in a subpackage `bar.bar2` then the rule is satisfied).
 
 ### Installation & use
 
-Install `pytest-arch` via the Python package manager of your choice (e.g., pip or poetry).
+Install `pytest-arch` via the Python package manager of your choice (e.g., pip or uv).
 
-If your project structure is "normal" then you can simply start using the `arch` fixture in your tests right away, as seen above. 
+If your project structure is "normal" then you can simply start using the `arch` fixture in your tests right away, as seen above.
 
 ### Complex examples
-Imports in tests are always specified like absolute imports (i.e., fully qualified).
+Import paths are always specified as fully qualified absolute paths (using `.` as separator).
 
 ```python
-def test_import_subpackage(arch):
-    assert arch.import_of('fizz.buzz') not in arch.modules_at('foo.bar')
-``` 
-Checks that module `buzz` in package `fizz` is not imported in module `bar` of package `foo`. Note that the dot `.` is used as path separator (other path separators like `/` are not supported).
+from pyarch import can_import, must_not_import, scope
 
-    
-```python
-def test_import_complex(arch):
-    assert arch.import_of('foo', absolute=True) in arch.modules_at(
-        'bar', exclude=['lorem', 'ipsum']
-    )
+def test_layered_architecture(arch):
+    arch.check({
+        scope('myapp', without='api'): must_not_import('myapp.api'),
+        'myapp.api':                   can_import('myapp.core'),
+    })
 ```
-Via the boolean argument `absolute` you can specify that only absolute or relative imports of `foo` should be considered.
-Via the argument `exclude` you can exclude subpackages from the check (in this case `bar.lorem` and `bar.ipsum`).
+`scope('myapp', without='api')` covers all of `myapp` except the `myapp.api` subpackage. Pass a list to exclude multiple subpackages: `without=['api', 'adapters']`.
+
+```python
+def test_no_relative_imports_in_public_api(arch):
+    arch.check({
+        scope('myapp.api'): must_not_import('myapp', via='relative'),
+    })
+```
+Via the `via` argument you can restrict a rule to only absolute (`via='absolute'`) or only relative (`via='relative'`) imports. Omitting `via` matches both.
+
+```python
+def test_multiple_rules_per_scope(arch):
+    arch.check({
+        scope('myapp', without=['adapters']): [
+            must_not_import('sqlalchemy'),
+            must_not_import('flask'),
+        ],
+    })
+```
+A list of predicates can be used to apply multiple rules to the same scope. All failures are reported together rather than stopping at the first violation.
 
 ## Details
 
 ### How it works
 
-In principle this plugin uses the `ast` module from the standard libray to analyze at the abstract syntax tree of your project. Import statement are collected and normalized. This is triggered by using the `arch` fixture in a test. Note that this can take a while. Behind the scenes this data is then used by `arch.modules_at` factory method in your tests.
+This plugin uses the `ast` module from the standard library to analyze the abstract syntax tree of your project. Import statements are collected and normalized when the `arch` fixture is first used in a test session.
 
-The analysis of the abstact syntax tree is superficial, so there are limitations. Due to the dynamic nature of Python it is easy to circumvent tests if you want to. So we assume that this plugin is used in a "friendly" context.
+The analysis is superficial, so there are limitations. Due to the dynamic nature of Python it is easy to circumvent tests if you want to. So we assume that this plugin is used in a "friendly" context.
 
 Note that we don't track how the imported symbols are used. For example, in the case of
 ```python
@@ -56,11 +75,11 @@ import a
 ...
 a.b()
 ```
-you will *not* be able to check that `a.b` is used (e.g., via `arch.import_of('a.b')`). 
+you will *not* be able to check that `a.b` is used (e.g., via `can_import('a.b')`).
 
 ### Absolute vs. relative imports
 
-Imports in tests are always specified like absolute imports (i.e., fully qualified), regardless if relative imports are used in the source. You can optionally use the `absolute` argument for `arch.import_of` to distinguish between absolute and relative imports.
+Import paths in rules are always specified as fully qualified absolute paths, regardless of whether relative imports are used in the source. You can optionally use the `via` argument to distinguish between absolute and relative imports.
 
 Note that relative imports from outside the configured project source directory are not supported (because we can't normalize those).
 

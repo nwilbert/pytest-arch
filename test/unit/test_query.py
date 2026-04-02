@@ -1,136 +1,116 @@
 import pytest
 
 from pyarch.model import DotPath
-from pyarch.query import ImportOf, ModulesAt
+from pyarch.query import (
+    _find_matching_imports,
+    can_import,
+    must_not_import,
+    scope,
+)
+
+
+def test_scope_hashable():
+    s = scope('foo.bar')
+    assert {s: 'value'}[s] == 'value'
+
+
+def test_scope_without():
+    s = scope('foo', without=['bar', 'baz'])
+    assert s.without == ('bar', 'baz')
+
+
+def test_scope_without_single_string():
+    s = scope('foo', without='bar')
+    assert s.without == ('bar',)
+
+
+def test_can_import_defaults():
+    p = can_import('foo.bar')
+    assert p.path == 'foo.bar'
+    assert p.via is None
+
+
+def test_can_import_via():
+    assert can_import('foo', via='absolute').via == 'absolute'
+    assert can_import('foo', via='relative').via == 'relative'
+
+
+def test_must_not_import_defaults():
+    p = must_not_import('foo.bar')
+    assert p.path == 'foo.bar'
+    assert p.via is None
 
 
 @pytest.mark.parametrize(
     'project_structure',
-    [
-        {
-            'a.py': 'from b import x',
-        }
-    ],
+    [{'a.py': 'from b import x'}],
 )
-def test_contains_flat(arch_root_node):
+def test_find_matching_imports_flat(arch_root_node):
     a = arch_root_node.get(DotPath('a'))
-    assert ImportOf(DotPath('b')) in ModulesAt(a)
-    assert ImportOf(DotPath('b.x')) in ModulesAt(a)
-    assert ImportOf(DotPath('c')) not in ModulesAt(a)
-    assert ImportOf(DotPath('b.y')) not in ModulesAt(a)
+    assert list(_find_matching_imports(a, [], DotPath('b'), None))
+    assert list(_find_matching_imports(a, [], DotPath('b.x'), None))
+    assert not list(_find_matching_imports(a, [], DotPath('c'), None))
+    assert not list(_find_matching_imports(a, [], DotPath('b.y'), None))
+    assert not list(_find_matching_imports(a, [], DotPath('b.x.y'), None))
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'d': {'e.py': 'import x'}}],
 )
-def test_contains_nested(arch_root_node):
+def test_find_matching_imports_nested(arch_root_node):
     d = arch_root_node.get(DotPath('d'))
-    assert ImportOf(DotPath('x')) in ModulesAt(d)
-    assert ImportOf(DotPath('y')) not in ModulesAt(d)
+    assert list(_find_matching_imports(d, [], DotPath('x'), None))
+    assert not list(_find_matching_imports(d, [], DotPath('y'), None))
 
 
 @pytest.mark.parametrize(
     'project_structure',
-    [{'a.py': ''}],
+    [{'a.py': 'import x\nimport x.y'}],
 )
-def test_contains_with_wrong_type(arch):
-    with pytest.raises(NotImplementedError):
-        assert 42 in arch.modules_at('a')
-
-
-@pytest.mark.parametrize(
-    'project_structure',
-    [{'d': {'a.py': 'import x', 'b.py': 'import y'}}],
-)
-def test_explain_contains_false(arch_root_node):
-    d = arch_root_node.get(DotPath('d'))
-    lines = ModulesAt(d).explain_why_contains_is_false(ImportOf(DotPath('z')))
-    assert len(lines) == 2
-    assert 'no matching' in lines[0]
-    assert 'no matching' in lines[1]
-    assert 'a.py' in lines[0]
-    assert 'b.py' in lines[1]
-
-
-@pytest.mark.parametrize(
-    'project_structure',
-    [
-        {'r': {'a.py': 'import x', '__init__.py': 'import x'}},
-    ],
-)
-def test_explain_contains_false_with_init(arch_root_node):
-    r = arch_root_node.get(DotPath('r'))
-    lines = ModulesAt(r).explain_why_contains_is_false(ImportOf(DotPath('y')))
-    assert len(lines) == 2
-    assert '__init__.py' in lines[0]
-
-
-@pytest.mark.parametrize(
-    'project_structure',
-    [
-        {
-            'a.py': """
-                import x.y
-                import x.z
-            """
-        }
-    ],
-)
-def test_explain_contains_true(arch_root_node):
+def test_find_matching_imports_returns_line_numbers(arch_root_node):
     a = arch_root_node.get(DotPath('a'))
-    lines = ModulesAt(a).explain_why_contains_is_true(ImportOf(DotPath('x')))
-    assert len(lines) == 2
-    assert 'found import of x' in lines[0]
-    assert 'a.py:1' in lines[0]
-    assert 'found import of x' in lines[1]
-    assert 'a.py:2' in lines[1]
+    matches = list(_find_matching_imports(a, [], DotPath('x'), None))
+    assert len(matches) == 2
+    assert matches[0][1].line_no == 1
+    assert matches[1][1].line_no == 2
 
 
 @pytest.mark.parametrize(
-    'project_structure, absolute, n_lines',
+    'project_structure, via, n_matches',
     [
-        ({'a.py': 'import x'}, True, 1),
-        ({'a.py': 'from . import x'}, True, 0),
-        ({'a.py': 'import x'}, False, 0),
-        ({'a.py': 'from . import x'}, False, 1),
+        ({'a.py': 'import x'}, 'absolute', 1),
+        ({'a.py': 'from . import x'}, 'absolute', 0),
+        ({'a.py': 'import x'}, 'relative', 0),
+        ({'a.py': 'from . import x'}, 'relative', 1),
         ({'a.py': 'import x'}, None, 1),
         ({'a.py': 'from . import x'}, None, 1),
     ],
 )
-def test_explain_contains_true_with_absolute(arch_root_node, absolute, n_lines):
+def test_find_matching_imports_via(arch_root_node, via, n_matches):
     a = arch_root_node.get(DotPath('a'))
-    lines = ModulesAt(a).explain_why_contains_is_true(
-        ImportOf(DotPath('x'), absolute=absolute)
-    )
-    assert len(lines) == n_lines
+    matches = list(_find_matching_imports(a, [], DotPath('x'), via))
+    assert len(matches) == n_matches
 
 
 @pytest.mark.parametrize(
     'project_structure',
-    [
-        {'r': {'a.py': 'import x', 'b.py': 'import x'}},
-    ],
+    [{'r': {'a.py': 'import x', 'b.py': 'import x'}}],
 )
-def test_explain_contains_true_with_exclude(arch_root_node):
+def test_find_matching_imports_exclude(arch_root_node):
     r = arch_root_node.get(DotPath('r'))
-    lines = ModulesAt(r, exclude=[DotPath('b')]).explain_why_contains_is_true(
-        ImportOf(DotPath('x'))
-    )
-    assert len(lines) == 1
-    assert 'a.py' in lines[0]
+    matches = list(_find_matching_imports(r, [DotPath('b')], DotPath('x'), None))
+    assert len(matches) == 1
+    assert 'a.py' in str(matches[0][0].file_path)
 
 
 @pytest.mark.parametrize(
     'project_structure',
-    [
-        {'r': {'a.py': 'import x', 'b.py': 'import x'}},
-    ],
+    [{'r': {'a.py': 'import x', 'b.py': 'import x'}}],
 )
-def test_explain_contains_false_with_exclude(arch_root_node):
+def test_find_matching_imports_multiple_exclude(arch_root_node):
     r = arch_root_node.get(DotPath('r'))
-    lines = ModulesAt(r, exclude=[DotPath('b')]).explain_why_contains_is_false(
-        ImportOf(DotPath('y'))
+    matches = list(
+        _find_matching_imports(r, [DotPath('a'), DotPath('b')], DotPath('x'), None)
     )
-    assert len(lines) == 1
-    assert 'a.py' in lines[0]
+    assert len(matches) == 0

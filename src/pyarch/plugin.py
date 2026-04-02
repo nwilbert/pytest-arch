@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from .model import DotPath, RootNode
 from .parser import build_import_model
-from .query import ImportOf, ModulesAt
+from .query import CanImport, MustNotImport, Scope, _find_matching_imports
 
 log = logging.getLogger(__name__)
 
@@ -22,17 +23,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help='Paths for pytest-arch source code analysis '
         '(relative to rootpath or absolute).',
     )
-
-
-def pytest_assertrepr_compare(op: str, left: Any, right: Any) -> Sequence[str] | None:
-    match op, left, right:
-        case 'not in', ImportOf() as import_of, ModulesAt() as package:
-            first_line = f'{left} {op} {right}'
-            return [first_line] + package.explain_why_contains_is_true(import_of)
-        case 'in', ImportOf() as import_of, ModulesAt() as package:
-            first_line = f'{left} {op} {right}'
-            return [first_line] + package.explain_why_contains_is_false(import_of)
-    return None
 
 
 @pytest.fixture(scope='session')
@@ -78,49 +68,59 @@ def arch_root_node(arch_project_paths: Sequence[Path]) -> RootNode:
     return build_import_model(arch_project_paths[0])
 
 
+Predicate = CanImport | MustNotImport
+
+
 class ArchFixture:
-    """Factory for architecture objects to be used in test assertions."""
+    """Provides architecture rule checking for test assertions."""
 
     def __init__(self, arch_root_node: RootNode):
         self._root_node = arch_root_node
 
-    def modules_at(
-        self, path: str, *, exclude: Iterable[str] | None = None
-    ) -> ModulesAt:
+    # TODO: move the logic in here to query?
+    def check(self, rules: dict[str | Scope, Predicate | list[Predicate]]) -> None:
         """
-        Return object representing the module tree for the given path.
+        Check a set of architecture import rules.
 
-        It supports the operators `in` and `not in` to check if it does
-        or does not contain certain imports.
+        Raises AssertionError listing all violations if any rules fail.
         """
+        failures: list[str] = []
+        for scope, predicates in rules.items():
+            path = scope if isinstance(scope, str) else scope.path
+            without = [] if isinstance(scope, str) else list(scope.without)
 
-        node = self._root_node.get(DotPath(path))
-        if not node:
-            raise KeyError(f'Found no node for path {path} in project.')
-        if isinstance(exclude, str):
-            raise TypeError(
-                f'Value "{exclude}" for exclude argument is of type str, '
-                f'but should be an iterable (like ["{exclude}"]).'
+            node = self._root_node.get(DotPath(path))
+            if not node:
+                raise KeyError(f'Found no node for path {path} in project.')
+
+            exclude = [DotPath(e) for e in without]
+            predicate_list = (
+                predicates if isinstance(predicates, list) else [predicates]
             )
-        return ModulesAt(node, exclude=[DotPath(e) for e in exclude or []])
 
-    @staticmethod
-    def import_of(dot_path: str, *, absolute: bool | None = None) -> ImportOf:
-        """
-        Returns object representing an import of something from a module.
+            for predicate in predicate_list:
+                import_path = DotPath(predicate.path)
+                matches = list(
+                    _find_matching_imports(node, exclude, import_path, predicate.via)
+                )
+                if isinstance(predicate, CanImport) and not matches:
+                    for module_node in node.walk(exclude=exclude):
+                        if module_node.file_path.suffix == '.py':
+                            failures.append(
+                                f'  [scope {path}] must import {predicate.path}'
+                                f' — no matching import in {module_node.file_path}'
+                            )
+                elif isinstance(predicate, MustNotImport) and matches:
+                    for module_node, import_by in matches:
+                        failures.append(
+                            f'  [scope {path}] must not import {predicate.path}'
+                            f' — found in {module_node.file_path}:{import_by.line_no}'
+                        )
 
-        This includes imports of child elements. So 'a.b' would also match
-        imports of 'a.b.c'.
-
-        On the other hand, it does not cover imports of parent. So 'a.b' would
-        not match imports of 'a'.
-
-        Note that the use of 'a.b' in the following example can't be expressed:
-            import a
-            ...
-            a.b()
-        """
-        return ImportOf(DotPath(dot_path), absolute=absolute)
+        if failures:
+            raise AssertionError(
+                'Architecture rule violations:\n' + '\n'.join(failures)
+            )
 
 
 @pytest.fixture
