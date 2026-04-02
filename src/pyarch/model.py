@@ -98,19 +98,14 @@ class RootNode:
         if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
         if child := self._children.get(dot_path.parts[0]):
-            remaining_path = (
-                DotPath(dot_path.parts[1:]) if len(dot_path.parts) > 1 else DotPath()
-            )
-            return child.get(remaining_path)
+            return child.get(DotPath(dot_path.parts[1:]))
         return None
 
     def get_or_add(self, dot_path: DotPath, file_path: Path) -> ModuleNode:
         if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
         name = dot_path.parts[0]
-        remaining_path = (
-            DotPath(dot_path.parts[1:]) if len(dot_path.parts) > 1 else DotPath()
-        )
+        remaining_path = DotPath(dot_path.parts[1:])
         if not (child := self._children.get(name)):
             if remaining_path.parts:
                 child_file_path = Path(*file_path.parts[: -len(remaining_path.parts)])
