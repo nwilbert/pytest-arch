@@ -1,37 +1,42 @@
-[tool.poetry]
+[project]
 name = "pytest-arch"
 version = "0.1.4"
 description = "A pythonic derivative of ArchUnit, in the form of a pytest plugin."
-license = "Apache-2.0"
-authors = ["Niko Wilbert <mail@nikowilbert.de>"]
+license = { text = "Apache-2.0" }
+authors = [{ name = "Niko Wilbert", email = "mail@nikowilbert.de" }]
 classifiers = ["Framework :: Pytest"]
-packages = [
-    { include = "pyarch", from = "src" },
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=7.2.2",
 ]
 
-[tool.poetry.plugins."pytest11"]
+[project.entry-points."pytest11"]
 arch = "pyarch.plugin"
 
-[tool.poetry.dependencies]
-python = "^3.10"
-pytest = "^7.2.2"
-
-[tool.poetry.group.dev.dependencies]
-nox = "^2022.11.21"
-nox-poetry = "^1.0.2"
-flake8 = "~4.0.1" # 5.0.4 is incompatible with blue
-mypy = "^1.1.1"
-blue = "^0.9.1"
-pytest-mock = "^3.10.0"
-coverage = "^7.2.1"
+[dependency-groups]
+lint = ["ruff>=0.9"]
+typecheck = ["mypy>=1.1.1"]
+test = ["pytest-mock>=3.10.0"]
+coverage = [{include-group = "test"}, "coverage>=7.2.1"]
+dev = [
+    "nox>=2022.11.21",
+    {include-group = "lint"},
+    {include-group = "typecheck"},
+    {include-group = "coverage"},
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.isort]
-profile = "black"
-line_length = 79
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyarch"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -41,4 +46,3 @@ warn_return_any = true
 show_error_codes = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
-

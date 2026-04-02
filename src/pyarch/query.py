@@ -1,4 +1,4 @@
-from typing import Iterable, Iterator, Optional, Tuple
+from collections.abc import Iterable, Iterator
 
 from .model import DotPath, ImportInModule, ModuleNode
 
@@ -32,7 +32,7 @@ class ModulesAt:
     def __init__(
         self,
         base_node: ModuleNode,
-        exclude: Optional[Iterable[DotPath]] = None,
+        exclude: Iterable[DotPath] | None = None,
     ):
         self._base_node = base_node
         self._exclude = exclude or []
@@ -72,13 +72,12 @@ class ModulesAt:
 
     def _matching_imports(
         self, import_of: ImportOf
-    ) -> Iterator[Tuple[ModuleNode, ImportInModule]]:
+    ) -> Iterator[tuple[ModuleNode, ImportInModule]]:
         import_of_path = import_of.import_path
         for module_node in self._base_node.walk(exclude=self._exclude):
             for import_by in module_node.imports:
                 if import_by.import_path.is_relative_to(import_of_path):
-                    if (
-                        import_of.absolute is None
-                        or import_of.absolute != bool(import_by.level)
+                    if import_of.absolute is None or import_of.absolute != bool(
+                        import_by.level
                     ):
                         yield module_node, import_by

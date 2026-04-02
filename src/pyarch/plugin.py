@@ -1,6 +1,7 @@
 import logging
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Optional, Sequence
+from typing import Any
 
 import pytest
 
@@ -23,20 +24,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-def pytest_assertrepr_compare(
-    op: str, left: Any, right: Any
-) -> Sequence[str] | None:
+def pytest_assertrepr_compare(op: str, left: Any, right: Any) -> Sequence[str] | None:
     match op, left, right:
         case 'not in', ImportOf() as import_of, ModulesAt() as package:
             first_line = f'{left} {op} {right}'
-            return [first_line] + package.explain_why_contains_is_true(
-                import_of
-            )
+            return [first_line] + package.explain_why_contains_is_true(import_of)
         case 'in', ImportOf() as import_of, ModulesAt() as package:
             first_line = f'{left} {op} {right}'
-            return [first_line] + package.explain_why_contains_is_false(
-                import_of
-            )
+            return [first_line] + package.explain_why_contains_is_false(import_of)
     return None
 
 
@@ -90,7 +85,7 @@ class ArchFixture:
         self._root_node = arch_root_node
 
     def modules_at(
-        self, path: str, *, exclude: Optional[Iterable[str]] = None
+        self, path: str, *, exclude: Iterable[str] | None = None
     ) -> ModulesAt:
         """
         Return object representing the module tree for the given path.

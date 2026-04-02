@@ -1,7 +1,7 @@
 import ast
 import logging
+from collections.abc import Generator, Sequence
 from pathlib import Path
-from typing import Generator, Sequence, Tuple
 
 from .model import DotPath, ImportInModule, RootNode
 
@@ -50,9 +50,7 @@ def _collect_imports(
                             )
                             continue
                         else:
-                            from_path = (
-                                DotPath(node_path.parts[:-level]) / from_path
-                            )
+                            from_path = DotPath(node_path.parts[:-level]) / from_path
                     from_path /= alias.name
                     imports.append(
                         ImportInModule(
@@ -64,7 +62,7 @@ def _collect_imports(
     return imports
 
 
-def _walk_modules(base_path: Path) -> Generator[Tuple[Path, str], None, None]:
+def _walk_modules(base_path: Path) -> Generator[tuple[Path, str], None, None]:
     for path in base_path.glob('**/*.py'):
         if not any(part.startswith('.') for part in path.parts):
             yield path, path.read_text()

@@ -2,54 +2,51 @@ import webbrowser
 from pathlib import Path
 
 import nox
-from nox_poetry import session
 
 src_path = 'src'
 code_paths = [src_path, 'test', 'noxfile.py']
 
+nox.options.default_venv_backend = 'uv'
 nox.options.sessions = [
-    'blue',
-    'isort',
-    'flake8',
+    'ruff_format',
+    'ruff_lint',
     'mypy',
     'pytest',
     'coverage',
 ]
 
 
-@session
-def blue(session):
-    session.install('blue')
-    session.run('blue', *code_paths)
+def _sync(session: nox.Session, group: str) -> None:
+    session.run('uv', 'sync', '--group', group, '--active', external=True)
 
 
-@session
-def isort(session):
-    session.install('isort')
-    session.run('isort', *code_paths)
+@nox.session
+def ruff_format(session):
+    _sync(session, 'lint')
+    session.run('ruff', 'format', *code_paths)
 
 
-@session
-def flake8(session):
-    session.install('flake8')
-    session.run('flake8', *code_paths)
+@nox.session
+def ruff_lint(session):
+    _sync(session, 'lint')
+    session.run('ruff', 'check', *code_paths)
 
 
-@session
+@nox.session
 def mypy(session):
-    session.install('mypy', '.')
+    _sync(session, 'typecheck')
     session.run('mypy', src_path)
 
 
-@session(python=['3.10', '3.11'])
+@nox.session(python=['3.10', '3.11', '3.12', '3.13', '3.14'])
 def pytest(session):
-    session.install('pytest', 'pytest-mock', '.')
+    _sync(session, 'test')
     session.run('pytest')
 
 
-@session
+@nox.session
 def coverage(session):
-    session.install('pytest', 'pytest-mock', 'coverage', '.')
+    _sync(session, 'coverage')
     session.run(
         'coverage',
         'run',
@@ -61,9 +58,7 @@ def coverage(session):
         'test/unit',
     )
     try:
-        session.run(
-            'coverage', 'report', '--fail-under', '100', '--show-missing'
-        )
+        session.run('coverage', 'report', '--fail-under', '100', '--show-missing')
     finally:
         if 'html' in session.posargs:
             session.run('coverage', 'html', '--skip-covered')

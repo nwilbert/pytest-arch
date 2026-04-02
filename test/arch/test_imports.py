@@ -14,15 +14,9 @@ def test_internal_dependencies(arch):
 
 
 def test_all_internal_imports_must_be_relative(arch):
-    assert arch.import_of('pyarch', absolute=True) not in arch.modules_at(
-        'pyarch'
-    )
+    assert arch.import_of('pyarch', absolute=True) not in arch.modules_at('pyarch')
 
 
 def test_external_dependencies(arch):
-    assert arch.import_of('ast') not in arch.modules_at(
-        'pyarch', exclude=['parser']
-    )
-    assert arch.import_of('pytest') not in arch.modules_at(
-        'pyarch', exclude=['plugin']
-    )
+    assert arch.import_of('ast') not in arch.modules_at('pyarch', exclude=['parser'])
+    assert arch.import_of('pytest') not in arch.modules_at('pyarch', exclude=['plugin'])

@@ -98,9 +98,7 @@ def test_explain_contains_true(arch_root_node):
         ({'a.py': 'from . import x'}, None, 1),
     ],
 )
-def test_explain_contains_true_with_absolute(
-    arch_root_node, absolute, n_lines
-):
+def test_explain_contains_true_with_absolute(arch_root_node, absolute, n_lines):
     a = arch_root_node.get(DotPath('a'))
     lines = ModulesAt(a).explain_why_contains_is_true(
         ImportOf(DotPath('x'), absolute=absolute)

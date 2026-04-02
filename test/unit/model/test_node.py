@@ -121,6 +121,5 @@ def test_node_walk_exclude(exclude, visited):
     base_node.get_or_add(DotPath('a.b.c'), Path())
     base_node.get_or_add(DotPath('a.d'), Path())
     assert {
-        node.name
-        for node in base_node.walk(exclude=[DotPath(p) for p in exclude])
+        node.name for node in base_node.walk(exclude=[DotPath(p) for p in exclude])
     } == visited

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Any, Iterable, Iterator, Optional, Sequence, Union
+from typing import Any
 
 
 class DotPath:
@@ -11,9 +14,9 @@ class DotPath:
     Largely follows the Path interface from pathlib.
     """
 
-    def __init__(self, path: str | Iterable[str] | 'DotPath' | None = None):
+    def __init__(self, path: str | Iterable[str] | DotPath | None = None):
         self._parts: tuple[str, ...]
-        self._hash: Optional[int] = None
+        self._hash: int | None = None
         if not path:
             self._parts = tuple()
         elif isinstance(path, str):
@@ -24,7 +27,7 @@ class DotPath:
             self._parts = tuple(path)
 
     @classmethod
-    def from_path(cls, path: PurePath) -> 'DotPath':
+    def from_path(cls, path: PurePath) -> DotPath:
         parts = list(path.parts)
         if len(parts) == 0:
             return DotPath()
@@ -34,7 +37,7 @@ class DotPath:
             parts[-1] = parts[-1].removesuffix('.py')
         return cls(parts)
 
-    def is_relative_to(self, other: 'DotPath') -> bool:
+    def is_relative_to(self, other: DotPath) -> bool:
         if len(other.parts) > len(self.parts):
             return False
         if other.parts == self.parts[: len(other.parts)]:
@@ -50,7 +53,7 @@ class DotPath:
         return self._parts[-1]
 
     @property
-    def parent(self) -> 'DotPath':
+    def parent(self) -> DotPath:
         return DotPath(self._parts[:-1])
 
     def __str__(self) -> str:
@@ -69,10 +72,10 @@ class DotPath:
             return NotImplemented
         return self._parts == other._parts
 
-    def __truediv__(self, other: Union['DotPath', str]) -> 'DotPath':
+    def __truediv__(self, other: DotPath | str) -> DotPath:
         return DotPath(self.parts + DotPath(other).parts)
 
-    def __rtruediv__(self, other: Union['DotPath', str]) -> 'DotPath':
+    def __rtruediv__(self, other: DotPath | str) -> DotPath:
         return DotPath(DotPath(other).parts + self.parts)
 
 
@@ -89,34 +92,28 @@ class RootNode:
     """Represents the root of a tree of module nodes."""
 
     def __init__(self) -> None:
-        self._children: dict[str, 'ModuleNode'] = {}
+        self._children: dict[str, ModuleNode] = {}
 
-    def get(self, dot_path: DotPath) -> Optional['ModuleNode']:
+    def get(self, dot_path: DotPath) -> ModuleNode | None:
         if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
         if child := self._children.get(dot_path.parts[0]):
             remaining_path = (
-                DotPath(dot_path.parts[1:])
-                if len(dot_path.parts) > 1
-                else DotPath()
+                DotPath(dot_path.parts[1:]) if len(dot_path.parts) > 1 else DotPath()
             )
             return child.get(remaining_path)
         return None
 
-    def get_or_add(self, dot_path: DotPath, file_path: Path) -> 'ModuleNode':
+    def get_or_add(self, dot_path: DotPath, file_path: Path) -> ModuleNode:
         if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
         name = dot_path.parts[0]
         remaining_path = (
-            DotPath(dot_path.parts[1:])
-            if len(dot_path.parts) > 1
-            else DotPath()
+            DotPath(dot_path.parts[1:]) if len(dot_path.parts) > 1 else DotPath()
         )
         if not (child := self._children.get(name)):
             if remaining_path.parts:
-                child_file_path = Path(
-                    *file_path.parts[: -len(remaining_path.parts)]
-                )
+                child_file_path = Path(*file_path.parts[: -len(remaining_path.parts)])
             else:
                 child_file_path = file_path
             child = ModuleNode(name=name, file_path=child_file_path)
@@ -165,9 +162,7 @@ class ModuleNode(RootNode):
     def add_imports(self, imports: Iterable[ImportInModule]) -> None:
         self._imports += imports
 
-    def add_data_for_init_file(
-        self, imports: Iterable[ImportInModule]
-    ) -> None:
+    def add_data_for_init_file(self, imports: Iterable[ImportInModule]) -> None:
         """Turn a directory node into a package node,
         with data from the `__init__.py` file.
 
@@ -178,13 +173,13 @@ class ModuleNode(RootNode):
             self._file_path /= '__init__.py'
         self.add_imports(imports)
 
-    def get(self, dot_path: DotPath) -> Optional['ModuleNode']:
+    def get(self, dot_path: DotPath) -> ModuleNode | None:
         """Return the node from this tree corresponding to the dot path."""
         if not dot_path.parts:
             return self
         return super().get(dot_path)
 
-    def get_or_add(self, dot_path: DotPath, file_path: Path) -> 'ModuleNode':
+    def get_or_add(self, dot_path: DotPath, file_path: Path) -> ModuleNode:
         """Return the node for this dot_path.
 
         If this node and any of its parents are missing then they are
@@ -194,9 +189,7 @@ class ModuleNode(RootNode):
             return self
         return super().get_or_add(dot_path, file_path)
 
-    def walk(
-        self, exclude: Optional[Iterable[DotPath]] = None
-    ) -> Iterator['ModuleNode']:
+    def walk(self, exclude: Iterable[DotPath] | None = None) -> Iterator[ModuleNode]:
         """Return all nodes including and below this node.
 
         If the exclude argument is used then the given paths are
