@@ -17,14 +17,15 @@ class DotPath:
     def __init__(self, path: str | Iterable[str] | DotPath | None = None):
         self._parts: tuple[str, ...]
         self._hash: int | None = None
-        if not path:
-            self._parts = tuple()
-        elif isinstance(path, str):
-            self._parts = tuple(path.split('.'))
-        elif isinstance(path, DotPath):
-            self._parts = path.parts
-        else:
-            self._parts = tuple(path)
+        match path:
+            case None | '' | []:
+                self._parts = tuple()
+            case str():
+                self._parts = tuple(path.split('.'))
+            case DotPath():
+                self._parts = path.parts
+            case _:
+                self._parts = tuple(path)
 
     @classmethod
     def from_path(cls, path: PurePath) -> DotPath:

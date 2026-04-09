@@ -78,7 +78,9 @@ def must_not_import_within_parent(*, via: Via) -> MustNotImportWithinParent:
     return MustNotImportWithinParent(via=via)
 
 
-Predicate = MustImport | MustNotImport | MustNotImportPrivate | MustNotImportWithinParent
+Predicate = (
+    MustImport | MustNotImport | MustNotImportPrivate | MustNotImportWithinParent
+)
 
 
 def evaluate_rules(
@@ -88,9 +90,12 @@ def evaluate_rules(
     """Evaluate all rules and return a list of human-readable failure messages."""
     failures: list[str] = []
     for scope_key, predicates in rules.items():
-        scope_path = scope_key if isinstance(scope_key, str) else scope_key.path
-        without = [] if isinstance(scope_key, str) else list(scope_key.without)
-        exclude = [DotPath(e) for e in without]
+        match scope_key:
+            case str():
+                scope_path = scope_key
+                exclude: list[DotPath] = []
+            case Scope(path=scope_path, without=without):
+                exclude = [DotPath(s) for s in without]
         predicate_list = predicates if isinstance(predicates, list) else [predicates]
 
         if scope_path is None:
@@ -117,41 +122,45 @@ def _evaluate_predicate(
     scope_label: str,
     failures: list[str],
 ) -> None:
-    if isinstance(predicate, MustImport):
-        import_path = DotPath(predicate.path)
-        if not any(_find_matching_imports(node, exclude, import_path, predicate.via)):
-            for module_node in node.walk(exclude=exclude):
-                if module_node.file_path.suffix == '.py':
-                    failures.append(
-                        f'  [scope {scope_label}] must import {predicate.path}'
-                        f' — no matching import in {module_node.file_path}'
-                    )
-    elif isinstance(predicate, MustNotImport):
-        import_path = DotPath(predicate.path)
-        matches = list(
-            _find_matching_imports(node, exclude, import_path, predicate.via)
-        )
-        for module_node, import_by in matches:
-            failures.append(
-                f'  [scope {scope_label}] must not import {predicate.path}'
-                f' — found in {module_node.file_path}:{import_by.line_no}'
-            )
-    elif isinstance(predicate, MustNotImportPrivate):
-        matches = list(_find_matching_private_imports(node, exclude, predicate.path))
-        for module_node, import_by in matches:
-            failures.append(
-                f'  [scope {scope_label}] must not import private symbols'
-                + (f' from {predicate.path}' if predicate.path else '')
-                + f' — found in {module_node.file_path}:{import_by.line_no}'
-            )
-    elif isinstance(predicate, MustNotImportWithinParent):
-        matches = list(_find_within_parent_imports(node, exclude, predicate.via))
-        for module_node, import_by in matches:
-            failures.append(
-                f'  [scope {scope_label}] must not use {predicate.via} import'
-                f' within parent package'
-                f' — found in {module_node.file_path}:{import_by.line_no}'
-            )
+    match predicate:
+        case MustImport():
+            import_path = DotPath(predicate.path)
+            if not any(
+                _find_matching_imports(node, exclude, import_path, predicate.via)
+            ):
+                for module_node in node.walk(exclude=exclude):
+                    if module_node.file_path.suffix == '.py':
+                        failures.append(
+                            f'  [scope {scope_label}] must import {predicate.path}'
+                            f' — no matching import in {module_node.file_path}'
+                        )
+        case MustNotImport():
+            import_path = DotPath(predicate.path)
+            for module_node, import_by in _find_matching_imports(
+                node, exclude, import_path, predicate.via
+            ):
+                failures.append(
+                    f'  [scope {scope_label}] must not import {predicate.path}'
+                    f' — found in {module_node.file_path}:{import_by.line_no}'
+                )
+        case MustNotImportPrivate():
+            for module_node, import_by in _find_matching_private_imports(
+                node, exclude, predicate.path
+            ):
+                failures.append(
+                    f'  [scope {scope_label}] must not import private symbols'
+                    + (f' from {predicate.path}' if predicate.path else '')
+                    + f' — found in {module_node.file_path}:{import_by.line_no}'
+                )
+        case MustNotImportWithinParent():
+            for module_node, import_by in _find_within_parent_imports(
+                node, exclude, predicate.via
+            ):
+                failures.append(
+                    f'  [scope {scope_label}] must not use {predicate.via} import'
+                    f' within parent package'
+                    f' — found in {module_node.file_path}:{import_by.line_no}'
+                )
 
 
 def _find_matching_imports(
