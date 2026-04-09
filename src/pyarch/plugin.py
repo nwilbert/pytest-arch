@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from .model import DotPath, RootNode
+from .model import RootNode
 from .parser import build_import_model
-from .query import CanImport, MustNotImport, Scope, _find_matching_imports
+from .query import Predicate, Scope, evaluate_rules
 
 log = logging.getLogger(__name__)
 
@@ -68,55 +68,19 @@ def arch_root_node(arch_project_paths: Sequence[Path]) -> RootNode:
     return build_import_model(arch_project_paths[0])
 
 
-Predicate = CanImport | MustNotImport
-
-
 class ArchFixture:
     """Provides architecture rule checking for test assertions."""
 
     def __init__(self, arch_root_node: RootNode):
         self._root_node = arch_root_node
 
-    # TODO: move the logic in here to query?
     def check(self, rules: dict[str | Scope, Predicate | list[Predicate]]) -> None:
         """
         Check a set of architecture import rules.
 
         Raises AssertionError listing all violations if any rules fail.
         """
-        failures: list[str] = []
-        for scope, predicates in rules.items():
-            path = scope if isinstance(scope, str) else scope.path
-            without = [] if isinstance(scope, str) else list(scope.without)
-
-            node = self._root_node.get(DotPath(path))
-            if not node:
-                raise KeyError(f'Found no node for path {path} in project.')
-
-            exclude = [DotPath(e) for e in without]
-            predicate_list = (
-                predicates if isinstance(predicates, list) else [predicates]
-            )
-
-            for predicate in predicate_list:
-                import_path = DotPath(predicate.path)
-                matches = list(
-                    _find_matching_imports(node, exclude, import_path, predicate.via)
-                )
-                if isinstance(predicate, CanImport) and not matches:
-                    for module_node in node.walk(exclude=exclude):
-                        if module_node.file_path.suffix == '.py':
-                            failures.append(
-                                f'  [scope {path}] must import {predicate.path}'
-                                f' — no matching import in {module_node.file_path}'
-                            )
-                elif isinstance(predicate, MustNotImport) and matches:
-                    for module_node, import_by in matches:
-                        failures.append(
-                            f'  [scope {path}] must not import {predicate.path}'
-                            f' — found in {module_node.file_path}:{import_by.line_no}'
-                        )
-
+        failures = evaluate_rules(self._root_node, rules)
         if failures:
             raise AssertionError(
                 'Architecture rule violations:\n' + '\n'.join(failures)

@@ -61,6 +61,26 @@ def test_multiple_rules_per_scope(arch):
 ```
 A list of predicates can be used to apply multiple rules to the same scope. All failures are reported together rather than stopping at the first violation.
 
+```python
+from pyarch import must_not_import_private, project
+
+def test_no_private_imports(arch):
+    arch.check({
+        project(): must_not_import_private(),
+    })
+```
+`must_not_import_private()` checks that no module imports a private symbol — any name starting with `_` or `__`, except the standard `__future__` module. `project()` is a special scope covering all modules in the project, useful for rules that apply globally. You can restrict to a specific package with `must_not_import_private('myapp')`.
+
+```python
+from pyarch import must_not_import_within_parent, project
+
+def test_intra_package_imports_are_relative(arch):
+    arch.check({
+        project(): must_not_import_within_parent(via='absolute'),
+    })
+```
+`must_not_import_within_parent(via='absolute')` checks that no module uses an absolute import to import from its own (immediate parent) package. For example, if `myapp.core.bbb` imports `myapp.core.aaa`, it must use `from .aaa import ...` rather than `from myapp.core.aaa import ...`. The `via` argument is required: use `via='absolute'` to enforce relative imports for intra-package dependencies, or `via='relative'` to enforce the opposite.
+
 ## Details
 
 ### How it works

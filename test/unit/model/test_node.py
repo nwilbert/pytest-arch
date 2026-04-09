@@ -41,10 +41,19 @@ def test_node_get_root(tree_base_node):
 
 def test_node_get_or_add():
     root_node = RootNode()
-    new_node = root_node.get_or_add(DotPath('a'), Path('a'))
-    assert new_node.name == 'a'
-    assert new_node.file_path == Path('a')
-    assert root_node.get(DotPath('a')).name == 'a'
+    new_node = root_node.get_or_add(DotPath('foo'), Path('bar'))
+    assert new_node.name == 'foo'
+    assert new_node.dot_path == DotPath('foo')
+    assert new_node.file_path == Path('bar')
+    assert root_node.get(DotPath('foo')).name == 'foo'
+
+
+def test_node_dot_path_nested():
+    root_node = RootNode()
+    root_node.get_or_add(DotPath('a.b.c'), Path('a', 'b', 'c'))
+    assert root_node.get(DotPath('a')).dot_path == DotPath('a')
+    assert root_node.get(DotPath('a.b')).dot_path == DotPath('a.b')
+    assert root_node.get(DotPath('a.b.c')).dot_path == DotPath('a.b.c')
 
 
 def test_node_get_or_add_new_parent(tree_base_node):
@@ -67,7 +76,7 @@ def test_node_add_imports():
         ImportInModule(DotPath('a'), line_no=1),
         ImportInModule(DotPath('b'), line_no=2),
     ]
-    node = ModuleNode('x', Path('foobar'))
+    node = ModuleNode('x', DotPath('y'), Path('z'))
     assert len(node.imports) == 0
     node.add_imports(imports)
     assert len(node.imports) == 2
@@ -82,7 +91,7 @@ def test_node_for_init_file():
         ImportInModule(DotPath('a'), line_no=1),
         ImportInModule(DotPath('b'), line_no=2),
     ]
-    node = ModuleNode('x', Path('foobar'))
+    node = ModuleNode('x', DotPath('x'), Path('foobar'))
     assert node.file_path.name == 'foobar'
     assert len(node.imports) == 0
     node.add_data_for_init_file(imports)
@@ -91,7 +100,7 @@ def test_node_for_init_file():
 
 
 def test_node_walk():
-    base_node = ModuleNode('base', Path())
+    base_node = ModuleNode('base', DotPath('base'), Path())
     base_node.get_or_add(DotPath('a.c'), Path())
     base_node.get_or_add(DotPath('a.b.x'), Path())
     visited = [node.name for node in base_node.walk()]
@@ -117,7 +126,7 @@ def test_node_walk():
     ],
 )
 def test_node_walk_exclude(exclude, visited):
-    base_node = ModuleNode('r', Path())
+    base_node = ModuleNode('r', DotPath('r'), Path())
     base_node.get_or_add(DotPath('a.b.c'), Path())
     base_node.get_or_add(DotPath('a.d'), Path())
     assert {

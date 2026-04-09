@@ -94,12 +94,19 @@ class RootNode:
     def __init__(self) -> None:
         self._children: dict[str, ModuleNode] = {}
 
+    def children(self) -> list[ModuleNode]:
+        """Return the direct children of this node."""
+        return list(self._children.values())
+
     def get(self, dot_path: DotPath) -> ModuleNode | None:
         if not dot_path.parts:
             raise KeyError('Empty path is not supported on root node.')
         if child := self._children.get(dot_path.parts[0]):
             return child.get(DotPath(dot_path.parts[1:]))
         return None
+
+    def _child_dotpath(self, name: str) -> DotPath:
+        return DotPath(name)
 
     def get_or_add(self, dot_path: DotPath, file_path: Path) -> ModuleNode:
         if not dot_path.parts:
@@ -111,7 +118,11 @@ class RootNode:
                 child_file_path = Path(*file_path.parts[: -len(remaining_path.parts)])
             else:
                 child_file_path = file_path
-            child = ModuleNode(name=name, file_path=child_file_path)
+            child = ModuleNode(
+                name=name,
+                full_dotpath=self._child_dotpath(name),
+                file_path=child_file_path,
+            )
             self._children[name] = child
         return child.get_or_add(remaining_path, file_path)
 
@@ -127,9 +138,10 @@ class ModuleNode(RootNode):
     node for the __init__.py file).
     """
 
-    def __init__(self, name: str, file_path: Path):
+    def __init__(self, name: str, full_dotpath: DotPath, file_path: Path):
         super().__init__()
         self._name: str = name
+        self._dot_path: DotPath = full_dotpath
         self._file_path: Path = file_path
         self._imports: list[ImportInModule] = []
 
@@ -140,6 +152,11 @@ class ModuleNode(RootNode):
         The `.py` file extension is not included in the name.
         """
         return self._name
+
+    @property
+    def dot_path(self) -> DotPath:
+        """The fully qualified dot-separated path of this module."""
+        return self._dot_path
 
     @property
     def imports(self) -> Sequence[ImportInModule]:
@@ -173,6 +190,9 @@ class ModuleNode(RootNode):
         if not dot_path.parts:
             return self
         return super().get(dot_path)
+
+    def _child_dotpath(self, name: str) -> DotPath:
+        return self._dot_path / name
 
     def get_or_add(self, dot_path: DotPath, file_path: Path) -> ModuleNode:
         """Return the node for this dot_path.
