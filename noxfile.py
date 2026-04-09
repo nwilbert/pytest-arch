@@ -11,8 +11,10 @@ nox.options.sessions = [
     'format',
     'lint',
     'mypy',
-    'pytest',
+    'test',
     'coverage',
+    'pytest_compat',
+    'audit',
 ]
 
 
@@ -38,10 +40,32 @@ def mypy(session):
     session.run('mypy', src_path)
 
 
-@nox.session(python=['3.10', '3.11', '3.12', '3.13', '3.14'])
-def pytest(session):
+@nox.session
+def test(session):
     _sync(session, 'test')
     session.run('pytest')
+
+
+PYTEST_PYTHON_MATRIX = [
+    ('7', ['3.10', '3.11', '3.12']),
+    ('8', ['3.10', '3.11', '3.12', '3.13']),
+    ('9', ['3.10', '3.11', '3.12', '3.13', '3.14']),
+]
+
+
+@nox.session
+@nox.parametrize(
+    'python,pytest_version',
+    [
+        (python, pytest_ver)
+        for pytest_ver, pythons in PYTEST_PYTHON_MATRIX
+        for python in pythons
+    ],
+)
+def pytest_compat(session, pytest_version):
+    _sync(session, 'test')
+    session.run('uv', 'pip', 'install', f'pytest~={pytest_version}.0', external=True)
+    session.run('pytest', 'test/integration')
 
 
 @nox.session

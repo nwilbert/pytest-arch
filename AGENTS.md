@@ -7,11 +7,12 @@ See README.md for the full API reference and usage examples.
 ## Commands
 
 ```bash
-# Run all default nox sessions (format, lint, typecheck, test, coverage)
+# Run all default nox sessions (format, lint, mypy, test, coverage, pytest_compat, audit)
 nox
 
 # Run a single nox session
-nox -s pytest
+nox -s test              # tests with lockfile pytest version
+nox -s pytest_compat     # tests across Python + pytest version matrix (integration only)
 nox -s lint
 nox -s mypy
 nox -s coverage
@@ -45,6 +46,10 @@ The plugin registers itself via the `pytest11` entry point in `pyproject.toml`, 
 - `test/unit/` — isolated unit tests (no filesystem)
 - `test/integration/` — tests using real project files on disk
 - `test/arch/` — self-referential architecture tests for this project
+
+## Documentation
+
+- Always update AGENTS.md and README.md when making changes that affect commands, architecture, or usage.
 
 ## Git
 
