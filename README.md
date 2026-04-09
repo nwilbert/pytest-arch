@@ -118,6 +118,13 @@ Alternatively you can specify the source root in the pytest configuration. If yo
         "foo/bar",
     ]
 ```
+With pytest 9.0+ you can also use the native TOML table:
+```
+[tool.pytest]
+    arch_project_paths = [
+        "foo/bar",
+    ]
+```
 Other config formats are supported as well, as long as they are supported by pytest.
 
 ### Future plans
