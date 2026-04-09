@@ -11,7 +11,7 @@ def test_explain_must_import_fail(pytester):
     explanation_lines = [
         line
         for line in result.outlines
-        if 'no matching import' in line and '[scope' in line
+        if line.lstrip().startswith('E') and 'no matching import' in line
     ]
     assert len(explanation_lines) == 1
     assert 'foo.py' in explanation_lines[0]
@@ -33,7 +33,9 @@ def test_explain_must_not_import_fail(pytester):
     result = pytester.runpytest()
     result.assert_outcomes(failed=1)
     explanation_lines = [
-        line for line in result.outlines if 'found in' in line and '[scope' in line
+        line
+        for line in result.outlines
+        if line.lstrip().startswith('E') and 'found in' in line
     ]
     assert len(explanation_lines) == 2
     assert 'foobar.py:1' in explanation_lines[0]
@@ -54,7 +56,9 @@ def test_explain_must_not_import_within_parent_fail(pytester):
     result = pytester.runpytest()
     result.assert_outcomes(failed=1)
     explanation_lines = [
-        line for line in result.outlines if 'found in' in line and '[scope' in line
+        line
+        for line in result.outlines
+        if line.lstrip().startswith('E') and 'found in' in line
     ]
     assert len(explanation_lines) == 1
     assert 'a.py:1' in explanation_lines[0]
