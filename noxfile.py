@@ -8,8 +8,8 @@ code_paths = [src_path, 'test', 'noxfile.py']
 
 nox.options.default_venv_backend = 'uv'
 nox.options.sessions = [
-    'ruff_format',
-    'ruff_lint',
+    'format',
+    'lint',
     'mypy',
     'pytest',
     'coverage',
@@ -21,13 +21,13 @@ def _sync(session: nox.Session, group: str) -> None:
 
 
 @nox.session
-def ruff_format(session):
+def format(session):
     _sync(session, 'lint')
     session.run('ruff', 'format', *code_paths)
 
 
 @nox.session
-def ruff_lint(session):
+def lint(session):
     _sync(session, 'lint')
     session.run('ruff', 'check', *code_paths)
 
