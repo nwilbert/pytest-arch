@@ -12,23 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync --group dev
-      - run: uv run nox -s lint
-      - run: uv run nox -s format -- --check
-      - run: uv run nox -s mypy
+      - run: uv tool install nox
+      - run: nox -s lint
+      - run: nox -s format -- --check
+      - run: nox -s mypy
 
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync --group test
-      - run: uv run pytest
+      - run: uv tool install nox
+      - run: nox -s test
 
   audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync --group audit
-      - run: uv run nox -s audit
+      - run: uv tool install nox
+      - run: nox -s audit
