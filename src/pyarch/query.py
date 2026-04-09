@@ -32,15 +32,15 @@ def project() -> Scope:
 
 
 @dataclass(frozen=True)
-class CanImport:
+class MustImport:
     """Predicate asserting that a scope must contain a given import."""
 
     path: str
     via: Via | None = None
 
 
-def can_import(path: str, *, via: Via | None = None) -> CanImport:
-    return CanImport(path=path, via=via)
+def must_import(path: str, *, via: Via | None = None) -> MustImport:
+    return MustImport(path=path, via=via)
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,7 @@ def must_not_import_within_parent(*, via: Via) -> MustNotImportWithinParent:
     return MustNotImportWithinParent(via=via)
 
 
-Predicate = CanImport | MustNotImport | MustNotImportPrivate | MustNotImportWithinParent
+Predicate = MustImport | MustNotImport | MustNotImportPrivate | MustNotImportWithinParent
 
 
 def evaluate_rules(
@@ -117,7 +117,7 @@ def _evaluate_predicate(
     scope_label: str,
     failures: list[str],
 ) -> None:
-    if isinstance(predicate, CanImport):
+    if isinstance(predicate, MustImport):
         import_path = DotPath(predicate.path)
         if not any(_find_matching_imports(node, exclude, import_path, predicate.via)):
             for module_node in node.walk(exclude=exclude):

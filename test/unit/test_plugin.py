@@ -1,23 +1,23 @@
 import pytest
 
-from pyarch import can_import, must_not_import, must_not_import_private, project, scope
+from pyarch import must_import, must_not_import, must_not_import_private, project, scope
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_can_import_passes(arch):
-    arch.check({'a': can_import('b.x')})
+def test_check_must_import_passes(arch):
+    arch.check({'a': must_import('b.x')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_can_import_fails(arch):
+def test_check_must_import_fails(arch):
     with pytest.raises(AssertionError, match='must import'):
-        arch.check({'a': can_import('c')})
+        arch.check({'a': must_import('c')})
 
 
 @pytest.mark.parametrize(
@@ -64,7 +64,7 @@ def test_check_collects_all_failures(arch):
     [{'a.py': 'from b import x'}],
 )
 def test_check_list_of_predicates(arch):
-    arch.check({'a': [can_import('b'), must_not_import('c')]})
+    arch.check({'a': [must_import('b'), must_not_import('c')]})
 
 
 @pytest.mark.parametrize(

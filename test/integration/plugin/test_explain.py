@@ -1,10 +1,10 @@
-def test_explain_can_import_fail(pytester):
+def test_explain_must_import_fail(pytester):
     pytester.makepyfile(foo='import fizz')
     pytester.makepyfile("""
-        from pyarch import can_import
+        from pyarch import must_import
 
         def test_arch(arch):
-            arch.check({'foo': can_import('bar')})
+            arch.check({'foo': must_import('bar')})
     """)
     result = pytester.runpytest()
     result.assert_outcomes(failed=1)

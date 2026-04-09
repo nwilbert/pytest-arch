@@ -1,5 +1,5 @@
 from pyarch import (
-    can_import,
+    must_import,
     must_not_import,
     must_not_import_private,
     must_not_import_within_parent,
@@ -16,9 +16,9 @@ def test_internal_dependencies(arch):
                 must_not_import('pyarch.query'),
                 must_not_import('pyarch.plugin'),
             ],
-            'pyarch.plugin': can_import('pyarch.model'),
-            'pyarch.query': can_import('pyarch.model'),
-            'pyarch.parser': can_import('pyarch.model'),
+            'pyarch.plugin': must_import('pyarch.model'),
+            'pyarch.query': must_import('pyarch.model'),
+            'pyarch.parser': must_import('pyarch.model'),
         }
     )
 

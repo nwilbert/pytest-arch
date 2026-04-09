@@ -5,7 +5,7 @@ from pyarch.query import (
     _find_matching_imports,
     _find_matching_private_imports,
     _find_within_parent_imports,
-    can_import,
+    must_import,
     must_not_import,
     must_not_import_private,
     must_not_import_within_parent,
@@ -40,15 +40,15 @@ def test_project_hashable():
     assert {p: 'value'}[p] == 'value'
 
 
-def test_can_import_defaults():
-    p = can_import('foo.bar')
+def test_must_import_defaults():
+    p = must_import('foo.bar')
     assert p.path == 'foo.bar'
     assert p.via is None
 
 
-def test_can_import_via():
-    assert can_import('foo', via='absolute').via == 'absolute'
-    assert can_import('foo', via='relative').via == 'relative'
+def test_must_import_via():
+    assert must_import('foo', via='absolute').via == 'absolute'
+    assert must_import('foo', via='relative').via == 'relative'
 
 
 def test_must_not_import_defaults():

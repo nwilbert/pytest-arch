@@ -9,17 +9,17 @@ For now, this plugin covers import statements in your Python code. This enables 
 
 ### Simple example
 ```python
-from pyarch import can_import, must_not_import
+from pyarch import must_import, must_not_import
 
 def test_imports(arch):
     arch.check({
-        'foo': can_import('bar'),
+        'foo': must_import('bar'),
         'baz': must_not_import('qux'),
     })
 ```
 This checks that module `foo` imports `bar`, and that module `baz` does not import `qux`.
 
-Both `can_import` and `must_not_import` are inclusive with regards to substructures
+Both `must_import` and `must_not_import` are inclusive with regards to substructures
 (i.e., if there is an import of `foo.foo2` in a subpackage `bar.bar2` then the rule is satisfied).
 
 ### Installation & use
@@ -32,12 +32,12 @@ If your project structure is "normal" then you can simply start using the `arch`
 Import paths are always specified as fully qualified absolute paths (using `.` as separator).
 
 ```python
-from pyarch import can_import, must_not_import, scope
+from pyarch import must_import, must_not_import, scope
 
 def test_layered_architecture(arch):
     arch.check({
         scope('myapp', without='api'): must_not_import('myapp.api'),
-        'myapp.api':                   can_import('myapp.core'),
+        'myapp.api':                   must_import('myapp.core'),
     })
 ```
 `scope('myapp', without='api')` covers all of `myapp` except the `myapp.api` subpackage. Pass a list to exclude multiple subpackages: `without=['api', 'adapters']`.
@@ -95,7 +95,7 @@ import a
 ...
 a.b()
 ```
-you will *not* be able to check that `a.b` is used (e.g., via `can_import('a.b')`).
+you will *not* be able to check that `a.b` is used (e.g., via `must_import('a.b')`).
 
 ### Absolute vs. relative imports
 
