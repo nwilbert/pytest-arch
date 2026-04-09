@@ -81,6 +81,8 @@ def test_intra_package_imports_are_relative(arch):
 ```
 `must_not_import_within_parent(via='absolute')` checks that no module uses an absolute import to import from its own (immediate parent) package. For example, if `myapp.core.bbb` imports `myapp.core.aaa`, it must use `from .aaa import ...` rather than `from myapp.core.aaa import ...`. The `via` argument is required: use `via='absolute'` to enforce relative imports for intra-package dependencies, or `via='relative'` to enforce the opposite.
 
+Note: This is similar to ruff's [TID252 (relative-imports)](https://docs.astral.sh/ruff/rules/relative-imports/#relative-imports-tid252) rule, but works in the opposite direction — TID252 bans relative imports in favor of absolute ones, while `must_not_import_within_parent(via='absolute')` bans absolute intra-package imports in favor of relative ones.
+
 ## Details
 
 ### How it works
