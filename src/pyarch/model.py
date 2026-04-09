@@ -19,7 +19,7 @@ class DotPath:
         self._hash: int | None = None
         match path:
             case None | '' | []:
-                self._parts = tuple()
+                self._parts = ()
             case str():
                 self._parts = tuple(path.split('.'))
             case DotPath():
@@ -41,9 +41,7 @@ class DotPath:
     def is_relative_to(self, other: DotPath) -> bool:
         if len(other.parts) > len(self.parts):
             return False
-        if other.parts == self.parts[: len(other.parts)]:
-            return True
-        return False
+        return other.parts == self.parts[: len(other.parts)]
 
     @property
     def parts(self) -> tuple[str, ...]:

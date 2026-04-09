@@ -26,7 +26,7 @@ def project_path(project_structure: dict[str, str | dict], tmp_path: Path) -> Pa
 
 
 @pytest.mark.parametrize(
-    'project_structure, path, import_obj',
+    ('project_structure', 'path', 'import_obj'),
     [
         (
             {
@@ -84,7 +84,7 @@ def test_import_from_init(project_path):
 
 
 @pytest.mark.parametrize(
-    'project_structure, path, import_obj',
+    ('project_structure', 'path', 'import_obj'),
     [
         (
             {

@@ -15,7 +15,7 @@ def tree_base_node():
 
 
 @pytest.mark.parametrize(
-    'path_str, result_name',
+    ('path_str', 'result_name'),
     [
         ('1', '1'),
         ('2', '2'),
@@ -109,7 +109,7 @@ def test_node_walk():
 
 
 @pytest.mark.parametrize(
-    'exclude, visited',
+    ('exclude', 'visited'),
     [
         ([], {'r', 'a', 'b', 'c', 'd'}),
         ([''], {'r', 'a', 'b', 'c', 'd'}),

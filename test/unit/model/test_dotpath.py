@@ -6,18 +6,18 @@ from pyarch.model import DotPath
 
 
 @pytest.mark.parametrize(
-    'path, parts',
+    ('path', 'parts'),
     [
-        (None, tuple()),
-        ('', tuple()),
+        (None, ()),
+        ('', ()),
         ('aa', ('aa',)),
         ('a.b', ('a', 'b')),
         ('ab.cd.e', ('ab', 'cd', 'e')),
         ('ab..cd', ('ab', '', 'cd')),
-        ([], tuple()),
+        ([], ()),
         (['a', 'b'], ('a', 'b')),
         (DotPath('a.b'), ('a', 'b')),
-        (DotPath(''), tuple()),
+        (DotPath(''), ()),
     ],
 )
 def test_dotpath_init(path: str, parts: tuple[str, ...]):
@@ -25,7 +25,7 @@ def test_dotpath_init(path: str, parts: tuple[str, ...]):
 
 
 @pytest.mark.parametrize(
-    'path, dotpath',
+    ('path', 'dotpath'),
     [
         (Path(), DotPath()),
         (Path('aa') / 'bb', DotPath('aa.bb')),
@@ -40,7 +40,7 @@ def test_dotpath_from_path(path: Path, dotpath: DotPath):
 
 
 @pytest.mark.parametrize(
-    'path, other, result',
+    ('path', 'other', 'result'),
     [
         ('', '', True),
         ('a', 'a', True),
@@ -66,7 +66,7 @@ def test_dotpath_name_index_error():
 
 
 @pytest.mark.parametrize(
-    'dotpath, parent',
+    ('dotpath', 'parent'),
     [
         (DotPath('aa'), DotPath()),
         (DotPath('aa.bb.cc'), DotPath('aa.bb')),

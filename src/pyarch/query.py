@@ -172,9 +172,10 @@ def _find_matching_imports(
     absolute = _via_to_absolute(via)
     for module_node in base_node.walk(exclude=exclude):
         for import_by in module_node.imports:
-            if import_by.import_path.is_relative_to(import_path):
-                if absolute is None or absolute != bool(import_by.level):
-                    yield module_node, import_by
+            if import_by.import_path.is_relative_to(import_path) and (
+                absolute is None or absolute != bool(import_by.level)
+            ):
+                yield module_node, import_by
 
 
 def _find_within_parent_imports(
@@ -188,9 +189,10 @@ def _find_within_parent_imports(
         if not parent.parts:
             continue  # top-level modules have no parent package to check
         for import_by in module_node.imports:
-            if import_by.import_path.is_relative_to(parent):
-                if absolute != bool(import_by.level):
-                    yield module_node, import_by
+            if import_by.import_path.is_relative_to(parent) and absolute != bool(
+                import_by.level
+            ):
+                yield module_node, import_by
 
 
 def _find_matching_private_imports(

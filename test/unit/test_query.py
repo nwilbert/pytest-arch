@@ -103,7 +103,7 @@ def test_find_matching_imports_returns_line_numbers(arch_root_node):
 
 
 @pytest.mark.parametrize(
-    'project_structure, via, n_matches',
+    ('project_structure', 'via', 'n_matches'),
     [
         ({'a.py': 'import x'}, 'absolute', 1),
         ({'a.py': 'from . import x'}, 'absolute', 0),

@@ -1,6 +1,17 @@
-from .query import must_import as must_import
-from .query import must_not_import as must_not_import
-from .query import must_not_import_private as must_not_import_private
-from .query import must_not_import_within_parent as must_not_import_within_parent
-from .query import project as project
-from .query import scope as scope
+from .query import (
+    must_import,
+    must_not_import,
+    must_not_import_private,
+    must_not_import_within_parent,
+    project,
+    scope,
+)
+
+__all__ = [
+    'must_import',
+    'must_not_import',
+    'must_not_import_private',
+    'must_not_import_within_parent',
+    'project',
+    'scope',
+]
