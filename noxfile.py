@@ -25,7 +25,7 @@ def _sync(session: nox.Session, group: str) -> None:
 @nox.session
 def format(session):
     _sync(session, 'lint')
-    session.run('ruff', 'format', *code_paths)
+    session.run('ruff', 'format', *session.posargs, *code_paths)
 
 
 @nox.session
