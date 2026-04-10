@@ -75,7 +75,7 @@ def coverage(session):
         'coverage',
         'run',
         '--source',
-        'pyarch',
+        'pytest_imports',
         '-m',
         'pytest',
         'test/integration',

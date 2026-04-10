@@ -1,10 +1,10 @@
 def test_explain_must_import_fail(pytester):
     pytester.makepyfile(foo='import fizz')
     pytester.makepyfile("""
-        from pyarch import must_import
+        from pytest_imports import must_import
 
-        def test_arch(arch):
-            arch.check({'foo': must_import('bar')})
+        def test_arch(imports):
+            imports.check({'foo': must_import('bar')})
     """)
     result = pytester.runpytest()
     result.assert_outcomes(failed=1)
@@ -25,10 +25,10 @@ def test_explain_must_not_import_fail(pytester):
     """
     )
     pytester.makepyfile("""
-        from pyarch import must_not_import
+        from pytest_imports import must_not_import
 
-        def test_arch(arch):
-            arch.check({'foobar': must_not_import('foo.bar')})
+        def test_arch(imports):
+            imports.check({'foobar': must_not_import('foo.bar')})
     """)
     result = pytester.runpytest()
     result.assert_outcomes(failed=1)
@@ -48,10 +48,10 @@ def test_explain_must_not_import_within_parent_fail(pytester):
     (pytester.path / 'pkg' / 'a.py').write_text('from pkg.b import x')
     (pytester.path / 'pkg' / 'b.py').write_text('x = 1')
     pytester.makepyfile("""
-        from pyarch import must_not_import_within_parent, project
+        from pytest_imports import must_not_import_within_parent, project
 
-        def test_arch(arch):
-            arch.check({project(): must_not_import_within_parent(via='absolute')})
+        def test_arch(imports):
+            imports.check({project(): must_not_import_within_parent(via='absolute')})
     """)
     result = pytester.runpytest()
     result.assert_outcomes(failed=1)

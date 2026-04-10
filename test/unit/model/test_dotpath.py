@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from pyarch.model import DotPath
+from pytest_imports.model import DotPath
 
 
 @pytest.mark.parametrize(

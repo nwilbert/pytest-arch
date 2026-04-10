@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from pyarch.model import DotPath, ImportInModule, ModuleNode, RootNode
+from pytest_imports.model import DotPath, ImportInModule, ModuleNode, RootNode
 
 
 @pytest.fixture

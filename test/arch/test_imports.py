@@ -1,4 +1,4 @@
-from pyarch import (
+from pytest_imports import (
     must_import,
     must_not_import,
     must_not_import_private,
@@ -8,40 +8,40 @@ from pyarch import (
 )
 
 
-def test_internal_dependencies(arch):
-    arch.check(
+def test_internal_dependencies(imports):
+    imports.check(
         {
-            scope('pyarch', without='plugin'): [
-                must_not_import('pyarch.parser'),
-                must_not_import('pyarch.query'),
-                must_not_import('pyarch.plugin'),
+            scope('pytest_imports', without='plugin'): [
+                must_not_import('pytest_imports.parser'),
+                must_not_import('pytest_imports.query'),
+                must_not_import('pytest_imports.plugin'),
             ],
-            'pyarch.plugin': must_import('pyarch.model'),
-            'pyarch.query': must_import('pyarch.model'),
-            'pyarch.parser': must_import('pyarch.model'),
+            'pytest_imports.plugin': must_import('pytest_imports.model'),
+            'pytest_imports.query': must_import('pytest_imports.model'),
+            'pytest_imports.parser': must_import('pytest_imports.model'),
         }
     )
 
 
-def test_all_internal_imports_must_be_relative(arch):
-    arch.check(
+def test_all_internal_imports_must_be_relative(imports):
+    imports.check(
         {
             project(): must_not_import_within_parent(via='absolute'),
         }
     )
 
 
-def test_external_dependencies(arch):
-    arch.check(
+def test_external_dependencies(imports):
+    imports.check(
         {
-            scope('pyarch', without='parser'): must_not_import('ast'),
-            scope('pyarch', without='plugin'): must_not_import('pytest'),
+            scope('pytest_imports', without='parser'): must_not_import('ast'),
+            scope('pytest_imports', without='plugin'): must_not_import('pytest'),
         }
     )
 
 
-def test_no_private_imports(arch):
-    arch.check(
+def test_no_private_imports(imports):
+    imports.check(
         {
             project(): must_not_import_private(),
         }

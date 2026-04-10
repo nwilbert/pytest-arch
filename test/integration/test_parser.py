@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from pyarch.model import DotPath, ImportInModule
-from pyarch.parser import build_import_model
+from pytest_imports.model import DotPath, ImportInModule
+from pytest_imports.parser import build_import_model
 
 
 def _create_project_on_disk(struct: dict[str, str | dict], current_path: Path):

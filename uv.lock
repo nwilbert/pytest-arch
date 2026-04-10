@@ -804,7 +804,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-arch"
+name = "pytest-imports"
 version = "0.1.4"
 source = { editable = "." }
 dependencies = [

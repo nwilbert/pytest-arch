@@ -1,59 +1,65 @@
 import pytest
 
-from pyarch import must_import, must_not_import, must_not_import_private, project, scope
+from pytest_imports import (
+    must_import,
+    must_not_import,
+    must_not_import_private,
+    project,
+    scope,
+)
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_must_import_passes(arch):
-    arch.check({'a': must_import('b.x')})
+def test_check_must_import_passes(imports):
+    imports.check({'a': must_import('b.x')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_must_import_fails(arch):
+def test_check_must_import_fails(imports):
     with pytest.raises(AssertionError, match='must import'):
-        arch.check({'a': must_import('c')})
+        imports.check({'a': must_import('c')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_must_not_import_passes(arch):
-    arch.check({'a': must_not_import('c')})
+def test_check_must_not_import_passes(imports):
+    imports.check({'a': must_not_import('c')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_must_not_import_fails(arch):
+def test_check_must_not_import_fails(imports):
     with pytest.raises(AssertionError, match='must not import'):
-        arch.check({'a': must_not_import('b')})
+        imports.check({'a': must_not_import('b')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'r': {'a.py': 'import x', 'b.py': 'import y'}}],
 )
-def test_check_scope_without(arch):
-    arch.check({scope('r', without='b'): must_not_import('y')})
+def test_check_scope_without(imports):
+    imports.check({scope('r', without='b'): must_not_import('y')})
     with pytest.raises(AssertionError):
-        arch.check({scope('r', without='b'): must_not_import('x')})
+        imports.check({scope('r', without='b'): must_not_import('x')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'r': {'a.py': 'import x', 'b.py': 'import y'}}],
 )
-def test_check_collects_all_failures(arch):
+def test_check_collects_all_failures(imports):
     with pytest.raises(AssertionError) as exc_info:
-        arch.check({'r': [must_not_import('x'), must_not_import('y')]})
+        imports.check({'r': [must_not_import('x'), must_not_import('y')]})
     msg = str(exc_info.value)
     assert 'a.py' in msg
     assert 'b.py' in msg
@@ -63,17 +69,17 @@ def test_check_collects_all_failures(arch):
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_list_of_predicates(arch):
-    arch.check({'a': [must_import('b'), must_not_import('c')]})
+def test_check_list_of_predicates(imports):
+    imports.check({'a': [must_import('b'), must_not_import('c')]})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': ''}],
 )
-def test_check_module_not_found(arch):
+def test_check_module_not_found(imports):
     with pytest.raises(KeyError):
-        arch.check({'foobar': must_not_import('x')})
+        imports.check({'foobar': must_not_import('x')})
 
 
 @pytest.mark.parametrize(
@@ -87,45 +93,45 @@ def test_check_module_not_found(arch):
         }
     ],
 )
-def test_check_via(arch):
-    arch.check({'a.b': must_not_import('a.x', via='absolute')})
-    arch.check({'a.d': must_not_import('x', via='relative')})
+def test_check_via(imports):
+    imports.check({'a.b': must_not_import('a.x', via='absolute')})
+    imports.check({'a.d': must_not_import('x', via='relative')})
     with pytest.raises(AssertionError):
-        arch.check({'a.b': must_not_import('a.x', via='relative')})
+        imports.check({'a.b': must_not_import('a.x', via='relative')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_check_must_not_import_private_passes(arch):
-    arch.check({'a': must_not_import_private()})
+def test_check_must_not_import_private_passes(imports):
+    imports.check({'a': must_not_import_private()})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import _x'}],
 )
-def test_check_must_not_import_private_fails(arch):
+def test_check_must_not_import_private_fails(imports):
     with pytest.raises(AssertionError, match='must not import private'):
-        arch.check({'a': must_not_import_private()})
+        imports.check({'a': must_not_import_private()})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import _x\nfrom c import _y'}],
 )
-def test_check_must_not_import_private_with_path(arch):
-    arch.check({'a': must_not_import_private('c2')})
+def test_check_must_not_import_private_with_path(imports):
+    imports.check({'a': must_not_import_private('c2')})
     with pytest.raises(AssertionError):
-        arch.check({'a': must_not_import_private('b')})
+        imports.check({'a': must_not_import_private('b')})
 
 
 @pytest.mark.parametrize(
     'project_structure',
     [{'a.py': 'from b import _x', 'c.py': 'from e import y'}],
 )
-def test_check_project_scope(arch):
-    arch.check({project(): must_not_import('d')})
+def test_check_project_scope(imports):
+    imports.check({project(): must_not_import('d')})
     with pytest.raises(AssertionError):
-        arch.check({project(): must_not_import_private()})
+        imports.check({project(): must_not_import_private()})

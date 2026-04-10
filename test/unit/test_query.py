@@ -1,7 +1,7 @@
 import pytest
 
-from pyarch.model import DotPath
-from pyarch.query import (
+from pytest_imports.model import DotPath
+from pytest_imports.query import (
     _find_matching_imports,
     _find_matching_private_imports,
     _find_within_parent_imports,
@@ -71,8 +71,8 @@ def test_must_not_import_private_with_path():
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_find_matching_imports_flat(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_imports_flat(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     assert list(_find_matching_imports(a, [], DotPath('b'), None))
     assert list(_find_matching_imports(a, [], DotPath('b.x'), None))
     assert not list(_find_matching_imports(a, [], DotPath('c'), None))
@@ -84,8 +84,8 @@ def test_find_matching_imports_flat(arch_root_node):
     'project_structure',
     [{'d': {'e.py': 'import x'}}],
 )
-def test_find_matching_imports_nested(arch_root_node):
-    d = arch_root_node.get(DotPath('d'))
+def test_find_matching_imports_nested(imports_root_node):
+    d = imports_root_node.get(DotPath('d'))
     assert list(_find_matching_imports(d, [], DotPath('x'), None))
     assert not list(_find_matching_imports(d, [], DotPath('y'), None))
 
@@ -94,8 +94,8 @@ def test_find_matching_imports_nested(arch_root_node):
     'project_structure',
     [{'a.py': 'import x\nimport x.y'}],
 )
-def test_find_matching_imports_returns_line_numbers(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_imports_returns_line_numbers(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     matches = list(_find_matching_imports(a, [], DotPath('x'), None))
     assert len(matches) == 2
     assert matches[0][1].line_no == 1
@@ -113,8 +113,8 @@ def test_find_matching_imports_returns_line_numbers(arch_root_node):
         ({'a.py': 'from . import x'}, None, 1),
     ],
 )
-def test_find_matching_imports_via(arch_root_node, via, n_matches):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_imports_via(imports_root_node, via, n_matches):
+    a = imports_root_node.get(DotPath('a'))
     matches = list(_find_matching_imports(a, [], DotPath('x'), via))
     assert len(matches) == n_matches
 
@@ -123,8 +123,8 @@ def test_find_matching_imports_via(arch_root_node, via, n_matches):
     'project_structure',
     [{'r': {'a.py': 'import x', 'b.py': 'import x'}}],
 )
-def test_find_matching_imports_exclude(arch_root_node):
-    r = arch_root_node.get(DotPath('r'))
+def test_find_matching_imports_exclude(imports_root_node):
+    r = imports_root_node.get(DotPath('r'))
     matches = list(_find_matching_imports(r, [DotPath('b')], DotPath('x'), None))
     assert len(matches) == 1
     assert 'a.py' in str(matches[0][0].file_path)
@@ -134,8 +134,8 @@ def test_find_matching_imports_exclude(arch_root_node):
     'project_structure',
     [{'r': {'a.py': 'import x', 'b.py': 'import x'}}],
 )
-def test_find_matching_imports_multiple_exclude(arch_root_node):
-    r = arch_root_node.get(DotPath('r'))
+def test_find_matching_imports_multiple_exclude(imports_root_node):
+    r = imports_root_node.get(DotPath('r'))
     matches = list(
         _find_matching_imports(r, [DotPath('a'), DotPath('b')], DotPath('x'), None)
     )
@@ -146,8 +146,8 @@ def test_find_matching_imports_multiple_exclude(arch_root_node):
     'project_structure',
     [{'a.py': 'from b import _x'}],
 )
-def test_find_matching_private_imports_matches_private(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_private_imports_matches_private(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     assert list(_find_matching_private_imports(a, [], None))
 
 
@@ -155,8 +155,8 @@ def test_find_matching_private_imports_matches_private(arch_root_node):
     'project_structure',
     [{'a.py': 'from b import x'}],
 )
-def test_find_matching_private_imports_ignores_public(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_private_imports_ignores_public(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     assert not list(_find_matching_private_imports(a, [], None))
 
 
@@ -164,8 +164,8 @@ def test_find_matching_private_imports_ignores_public(arch_root_node):
     'project_structure',
     [{'a.py': 'from __future__ import annotations'}],
 )
-def test_find_matching_private_imports_ignores_future(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_private_imports_ignores_future(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     assert not list(_find_matching_private_imports(a, [], None))
 
 
@@ -173,8 +173,8 @@ def test_find_matching_private_imports_ignores_future(arch_root_node):
     'project_structure',
     [{'a.py': 'from b import _x\nfrom c import _y'}],
 )
-def test_find_matching_private_imports_path_filter(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_matching_private_imports_path_filter(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     assert len(list(_find_matching_private_imports(a, [], 'b'))) == 1
     assert len(list(_find_matching_private_imports(a, [], 'c'))) == 1
     assert len(list(_find_matching_private_imports(a, [], None))) == 2
@@ -184,8 +184,8 @@ def test_find_matching_private_imports_path_filter(arch_root_node):
     'project_structure',
     [{'r': {'a.py': 'from b import _x', 'c.py': 'from d import y'}}],
 )
-def test_find_matching_private_imports_nested(arch_root_node):
-    r = arch_root_node.get(DotPath('r'))
+def test_find_matching_private_imports_nested(imports_root_node):
+    r = imports_root_node.get(DotPath('r'))
     matches = list(_find_matching_private_imports(r, [], None))
     assert len(matches) == 1
     assert 'a.py' in str(matches[0][0].file_path)
@@ -205,8 +205,8 @@ def test_must_not_import_within_parent_relative():
     'project_structure',
     [{'pkg': {'a.py': 'from pkg.b import x', 'b.py': ''}}],
 )
-def test_find_within_parent_imports_catches_absolute(arch_root_node):
-    pkg = arch_root_node.get(DotPath('pkg'))
+def test_find_within_parent_imports_catches_absolute(imports_root_node):
+    pkg = imports_root_node.get(DotPath('pkg'))
     matches = list(_find_within_parent_imports(pkg, [], 'absolute'))
     assert len(matches) == 1
     assert 'a.py' in str(matches[0][0].file_path)
@@ -216,8 +216,8 @@ def test_find_within_parent_imports_catches_absolute(arch_root_node):
     'project_structure',
     [{'pkg': {'a.py': 'from .b import x', 'b.py': ''}}],
 )
-def test_find_within_parent_imports_ignores_relative(arch_root_node):
-    pkg = arch_root_node.get(DotPath('pkg'))
+def test_find_within_parent_imports_ignores_relative(imports_root_node):
+    pkg = imports_root_node.get(DotPath('pkg'))
     assert not list(_find_within_parent_imports(pkg, [], 'absolute'))
 
 
@@ -225,8 +225,8 @@ def test_find_within_parent_imports_ignores_relative(arch_root_node):
     'project_structure',
     [{'pkg': {'a.py': 'from .b import x', 'b.py': ''}}],
 )
-def test_find_within_parent_imports_catches_relative(arch_root_node):
-    pkg = arch_root_node.get(DotPath('pkg'))
+def test_find_within_parent_imports_catches_relative(imports_root_node):
+    pkg = imports_root_node.get(DotPath('pkg'))
     matches = list(_find_within_parent_imports(pkg, [], 'relative'))
     assert len(matches) == 1
 
@@ -235,8 +235,8 @@ def test_find_within_parent_imports_catches_relative(arch_root_node):
     'project_structure',
     [{'pkg': {'a.py': 'import external'}}],
 )
-def test_find_within_parent_imports_ignores_external(arch_root_node):
-    pkg = arch_root_node.get(DotPath('pkg'))
+def test_find_within_parent_imports_ignores_external(imports_root_node):
+    pkg = imports_root_node.get(DotPath('pkg'))
     assert not list(_find_within_parent_imports(pkg, [], 'absolute'))
 
 
@@ -244,8 +244,8 @@ def test_find_within_parent_imports_ignores_external(arch_root_node):
     'project_structure',
     [{'a.py': 'import external'}],
 )
-def test_find_within_parent_imports_skips_top_level_modules(arch_root_node):
-    a = arch_root_node.get(DotPath('a'))
+def test_find_within_parent_imports_skips_top_level_modules(imports_root_node):
+    a = imports_root_node.get(DotPath('a'))
     assert not list(_find_within_parent_imports(a, [], 'absolute'))
 
 
@@ -253,8 +253,8 @@ def test_find_within_parent_imports_skips_top_level_modules(arch_root_node):
     'project_structure',
     [{'pkg': {'a.py': '#\n\nfrom pkg.b import x', 'b.py': 'from pkg.a import y'}}],
 )
-def test_find_within_parent_imports_returns_line_numbers(arch_root_node):
-    pkg = arch_root_node.get(DotPath('pkg'))
+def test_find_within_parent_imports_returns_line_numbers(imports_root_node):
+    pkg = imports_root_node.get(DotPath('pkg'))
     matches = list(_find_within_parent_imports(pkg, [], 'absolute'))
     assert len(matches) == 2
     assert matches[0][1].line_no == 3

@@ -5,7 +5,7 @@ def test_project_path_from_toml_config(pytester):
     """Test that config values are read from pyproject.toml"""
     pytester.makepyprojecttoml("""
         [tool.pytest.ini_options]
-        arch_project_paths = [
+        imports_project_paths = [
             "foobar",
             "/foo/bar"
         ]
@@ -13,10 +13,10 @@ def test_project_path_from_toml_config(pytester):
     pytester.makepyfile("""
         from pathlib import Path
 
-        def test_arch(arch_project_paths, pytestconfig):
-            assert len(arch_project_paths) == 2
-            assert arch_project_paths[0] == pytestconfig.rootpath / 'foobar'
-            assert arch_project_paths[1] == Path('/foo/bar')
+        def test_arch(imports_project_paths, pytestconfig):
+            assert len(imports_project_paths) == 2
+            assert imports_project_paths[0] == pytestconfig.rootpath / 'foobar'
+            assert imports_project_paths[1] == Path('/foo/bar')
     """)
     result = pytester.runpytest()
     result.assert_outcomes(passed=1)
@@ -26,17 +26,17 @@ def test_project_path_from_ini_config(pytester):
     """Test that config values are read from tox.ini"""
     pytester.makeini("""
         [pytest]
-        arch_project_paths =
+        imports_project_paths =
             foobar
             /foo/bar
     """)
     pytester.makepyfile("""
         from pathlib import Path
 
-        def test_arch(arch_project_paths, pytestconfig):
-            assert len(arch_project_paths) == 2
-            assert arch_project_paths[0] == pytestconfig.rootpath / 'foobar'
-            assert arch_project_paths[1] == Path('/foo/bar')
+        def test_arch(imports_project_paths, pytestconfig):
+            assert len(imports_project_paths) == 2
+            assert imports_project_paths[0] == pytestconfig.rootpath / 'foobar'
+            assert imports_project_paths[1] == Path('/foo/bar')
 
     """)
     result = pytester.runpytest()
@@ -50,9 +50,9 @@ def test_project_path_from_heuristic_with_src_dir(pytester):
     (pytester.path / 'root' / 'pyproject.toml').write_text('#')
     (pytester.path / 'root' / 'test' / 'test_path.py').write_text(
         cleandoc(f"""
-            def test_path(arch_project_paths):
-                assert len(arch_project_paths) == 1
-                assert (str(arch_project_paths[0]) ==
+            def test_path(imports_project_paths):
+                assert len(imports_project_paths) == 1
+                assert (str(imports_project_paths[0]) ==
                     '{pytester.path / 'root' / 'src'}')
             """)
     )
@@ -67,9 +67,9 @@ def test_project_path_from_heuristic_with_nested_dirs(pytester):
     (pytester.path / 'root' / 'pyproject.toml').write_text('#')
     (pytester.path / 'root' / 'test1' / 'test2' / 'test_path.py').write_text(
         cleandoc(f"""
-            def test_path(arch_project_paths):
-                assert len(arch_project_paths) == 1
-                assert str(arch_project_paths[0]) == '{pytester.path / 'root'}'
+            def test_path(imports_project_paths):
+                assert len(imports_project_paths) == 1
+                assert str(imports_project_paths[0]) == '{pytester.path / 'root'}'
             """)
     )
     result = pytester.runpytest('--rootdir', pytester.path / 'root' / 'test1' / 'test2')
@@ -83,9 +83,9 @@ def test_project_path_from_heuristic_with_setup_py(pytester):
     (pytester.path / 'root' / 'setup.py').write_text('#')
     (pytester.path / 'root' / 'test' / 'test_path.py').write_text(
         cleandoc(f"""
-            def test_path(arch_project_paths):
-                assert len(arch_project_paths) == 1
-                assert str(arch_project_paths[0]) == '{pytester.path / 'root'}'
+            def test_path(imports_project_paths):
+                assert len(imports_project_paths) == 1
+                assert str(imports_project_paths[0]) == '{pytester.path / 'root'}'
             """)
     )
     result = pytester.runpytest('--rootdir', pytester.path / 'root' / 'test')
@@ -95,11 +95,11 @@ def test_project_path_from_heuristic_with_setup_py(pytester):
 def test_project_path_multiple_not_implemented(pytester):
     pytester.makepyprojecttoml("""
         [tool.pytest.ini_options]
-        arch_project_paths = [
+        imports_project_paths = [
             "foobar",
             "/foo/bar"
         ]
     """)
-    pytester.makepyfile('def test_arch(arch): pass')
+    pytester.makepyfile('def test_arch(imports): pass')
     result = pytester.runpytest()
     result.assert_outcomes(errors=1)

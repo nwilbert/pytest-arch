@@ -29,10 +29,10 @@ nox -s coverage -- html
 
 ## Architecture
 
-The plugin registers itself via the `pytest11` entry point in `pyproject.toml`, pointing to `pyarch.plugin`.
+The plugin registers itself via the `pytest11` entry point in `pyproject.toml`, pointing to `pytest_imports.plugin`.
 
 **Data flow:**
-1. `plugin.py` — pytest fixtures + `ArchFixture.check()`. `arch_project_paths` resolves source roots; `arch_root_node` (session-scoped) builds the model once per session; `arch` wraps both.
+1. `plugin.py` — pytest fixtures + `ImportsFixture.check()`. `imports_project_paths` resolves source roots; `imports_root_node` (session-scoped) builds the model once per session; `imports` wraps both.
 2. `parser.py` — `build_import_model()` walks the filesystem with AST analysis to produce a `RootNode`.
 3. `model.py` — `RootNode` / `ModuleNode` (tree), `DotPath` (dot-separated path abstraction, pathlib-like), `ImportInModule` (single import record; `level > 0` means relative import).
 4. `query.py` — frozen dataclass predicates (`CanImport`, `MustNotImport`, `MustNotImportPrivate`); `Scope` (hashable dict key); factory functions exported from `__init__.py`; `evaluate_rules()` collects all failures before raising.

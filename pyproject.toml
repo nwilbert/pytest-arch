@@ -1,5 +1,5 @@
 [project]
-name = "pytest-arch"
+name = "pytest-imports"
 version = "0.1.4"
 description = "A pythonic derivative of ArchUnit, in the form of a pytest plugin."
 license = { text = "Apache-2.0" }
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.entry-points."pytest11"]
-arch = "pyarch.plugin"
+imports = "pytest_imports.plugin"
 
 [dependency-groups]
 lint = ["ruff>=0.15.8"]
@@ -32,7 +32,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pyarch"]
+packages = ["src/pytest_imports"]
 
 [tool.ruff.format]
 quote-style = "single"

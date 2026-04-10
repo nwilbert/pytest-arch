@@ -1,5 +1,5 @@
 
-# pytest-arch
+# pytest-imports
 
 *A pythonic derivative of [ArchUnit](https://www.archunit.org), in the form of a [pytest](https://www.pytest.org) plugin.*
 
@@ -9,10 +9,10 @@ For now, this plugin covers import statements in your Python code. This enables 
 
 ### Simple example
 ```python
-from pyarch import must_import, must_not_import
+from pytest_imports import must_import, must_not_import
 
-def test_imports(arch):
-    arch.check({
+def test_imports(imports):
+    imports.check({
         'foo': must_import('bar'),
         'baz': must_not_import('qux'),
     })
@@ -24,18 +24,18 @@ Both `must_import` and `must_not_import` are inclusive with regards to substruct
 
 ### Installation & use
 
-Install `pytest-arch` via the Python package manager of your choice (e.g., pip or uv).
+Install `pytest-imports` via the Python package manager of your choice (e.g., pip or uv).
 
-If your project structure is "normal" then you can simply start using the `arch` fixture in your tests right away, as seen above.
+If your project structure is "normal" then you can simply start using the `imports` fixture in your tests right away, as seen above.
 
 ### Complex examples
 Import paths are always specified as fully qualified absolute paths (using `.` as separator).
 
 ```python
-from pyarch import must_import, must_not_import, scope
+from pytest_imports import must_import, must_not_import, scope
 
-def test_layered_architecture(arch):
-    arch.check({
+def test_layered_architecture(imports):
+    imports.check({
         scope('myapp', without='api'): must_not_import('myapp.api'),
         'myapp.api':                   must_import('myapp.core'),
     })
@@ -43,16 +43,16 @@ def test_layered_architecture(arch):
 `scope('myapp', without='api')` covers all of `myapp` except the `myapp.api` subpackage. Pass a list to exclude multiple subpackages: `without=['api', 'adapters']`.
 
 ```python
-def test_no_relative_imports_in_public_api(arch):
-    arch.check({
+def test_no_relative_imports_in_public_api(imports):
+    imports.check({
         scope('myapp.api'): must_not_import('myapp', via='relative'),
     })
 ```
 Via the `via` argument you can restrict a rule to only absolute (`via='absolute'`) or only relative (`via='relative'`) imports. Omitting `via` matches both.
 
 ```python
-def test_multiple_rules_per_scope(arch):
-    arch.check({
+def test_multiple_rules_per_scope(imports):
+    imports.check({
         scope('myapp', without=['adapters']): [
             must_not_import('sqlalchemy'),
             must_not_import('flask'),
@@ -62,20 +62,20 @@ def test_multiple_rules_per_scope(arch):
 A list of predicates can be used to apply multiple rules to the same scope. All failures are reported together rather than stopping at the first violation.
 
 ```python
-from pyarch import must_not_import_private, project
+from pytest_imports import must_not_import_private, project
 
-def test_no_private_imports(arch):
-    arch.check({
+def test_no_private_imports(imports):
+    imports.check({
         project(): must_not_import_private(),
     })
 ```
 `must_not_import_private()` checks that no module imports a private symbol — any name starting with `_` or `__`, except the standard `__future__` module. `project()` is a special scope covering all modules in the project, useful for rules that apply globally. You can restrict to a specific package with `must_not_import_private('myapp')`.
 
 ```python
-from pyarch import must_not_import_within_parent, project
+from pytest_imports import must_not_import_within_parent, project
 
-def test_intra_package_imports_are_relative(arch):
-    arch.check({
+def test_intra_package_imports_are_relative(imports):
+    imports.check({
         project(): must_not_import_within_parent(via='absolute'),
     })
 ```
@@ -87,7 +87,7 @@ Note: This is similar to ruff's [TID252 (relative-imports)](https://docs.astral.
 
 ### How it works
 
-This plugin uses the `ast` module from the standard library to analyze the abstract syntax tree of your project. Import statements are collected and normalized when the `arch` fixture is first used in a test session.
+This plugin uses the `ast` module from the standard library to analyze the abstract syntax tree of your project. Import statements are collected and normalized when the `imports` fixture is first used in a test session.
 
 The analysis is superficial, so there are limitations. Due to the dynamic nature of Python it is easy to circumvent tests if you want to. So we assume that this plugin is used in a "friendly" context.
 
@@ -111,19 +111,19 @@ Both imports from inside your project and from external packages (standard libra
 
 ### Configuration
 
-This plugin uses a simple heuristic to determine the source root of your project. You can check the source root via the `arch_project_paths` fixture in a test.
+This plugin uses a simple heuristic to determine the source root of your project. You can check the source root via the `imports_project_paths` fixture in a test.
 
 Alternatively you can specify the source root in the pytest configuration. If you use a `pyproject.toml` then this looks like:
 ```
 [tool.pytest.ini_options]
-    arch_project_paths = [
+    imports_project_paths = [
         "foo/bar",
     ]
 ```
 With pytest 9.0+ you can also use the native TOML table:
 ```
 [tool.pytest]
-    arch_project_paths = [
+    imports_project_paths = [
         "foo/bar",
     ]
 ```
@@ -140,7 +140,7 @@ Licensed under the Apache License, Version 2.0 - see LICENSE.md in project root 
 ## Related Python libraries
 - https://pypi.org/project/import-linter
 - https://pypi.org/project/pytestarch
-- https://github.com/jwbargsten/pytest-archon
+- https://github.com/jwbargsten/pytest-importson
 - https://pypi.org/project/findimports
 - https://pypi.org/project/pydeps (based on bytecode, not AST)
 - https://docs.python.org/3/library/modulefinder.html (part of standard library, looks at runtime)
