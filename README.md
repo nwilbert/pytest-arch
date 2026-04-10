@@ -3,9 +3,7 @@
 
 *A pythonic derivative of [ArchUnit](https://www.archunit.org), in the form of a [pytest](https://www.pytest.org) plugin.*
 
-The idea is to write automated tests for the architecture aspects of your Python project.
-
-For now, this plugin covers import statements in your Python code. This enables you to write automated tests for the dependencies in your project.
+The idea is to write automated tests for the architecture aspects of your Python project. This plugin specifically covers import statements in your Python code, enabling you to check the dependencies in your project.
 
 ### Simple example
 ```python
@@ -131,7 +129,7 @@ Other config formats are supported as well, as long as they are supported by pyt
 
 ### Future plans
 
-- Possibly add more architecture aspects, beyond imports.
+- Add and finetune the available rule building blocks.
 - Optimize the implementation with regards to speed.
 
 ## License
