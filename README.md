@@ -138,6 +138,7 @@ Licensed under the Apache License, Version 2.0 - see LICENSE.md in project root 
 ## Related Python libraries
 - https://pypi.org/project/import-linter
 - https://pypi.org/project/pytestarch
+- https://pypi.org/project/pytest-archon
 - https://github.com/jwbargsten/pytest-importson
 - https://pypi.org/project/findimports
 - https://pypi.org/project/pydeps (based on bytecode, not AST)
