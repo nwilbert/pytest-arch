@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Any
 
 
 class DotPath:
@@ -66,7 +65,7 @@ class DotPath:
             self._hash = hash(tuple(self._parts))
         return self._hash
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, DotPath):
             return NotImplemented
         return self._parts == other._parts
