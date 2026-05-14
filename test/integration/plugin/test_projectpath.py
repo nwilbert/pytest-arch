@@ -16,7 +16,7 @@ def test_project_path_from_toml_config(pytester):
         def test_arch(imports_project_paths, pytestconfig):
             assert len(imports_project_paths) == 2
             assert imports_project_paths[0] == pytestconfig.rootpath / 'foobar'
-            assert imports_project_paths[1] == Path('/foo/bar')
+            assert imports_project_paths[1] == Path('/foo/bar').absolute()
     """)
     result = pytester.runpytest()
     result.assert_outcomes(passed=1)
@@ -36,7 +36,7 @@ def test_project_path_from_ini_config(pytester):
         def test_arch(imports_project_paths, pytestconfig):
             assert len(imports_project_paths) == 2
             assert imports_project_paths[0] == pytestconfig.rootpath / 'foobar'
-            assert imports_project_paths[1] == Path('/foo/bar')
+            assert imports_project_paths[1] == Path('/foo/bar').absolute()
 
     """)
     result = pytester.runpytest()
@@ -48,12 +48,12 @@ def test_project_path_from_heuristic_with_src_dir(pytester):
     (pytester.path / 'root' / 'src' / 'foobar').mkdir(parents=True)
     (pytester.path / 'root' / 'test').mkdir(parents=True)
     (pytester.path / 'root' / 'pyproject.toml').write_text('#')
+    expected = str(pytester.path / 'root' / 'src')
     (pytester.path / 'root' / 'test' / 'test_path.py').write_text(
         cleandoc(f"""
             def test_path(imports_project_paths):
                 assert len(imports_project_paths) == 1
-                assert (str(imports_project_paths[0]) ==
-                    '{pytester.path / 'root' / 'src'}')
+                assert str(imports_project_paths[0]) == {expected!r}
             """)
     )
     result = pytester.runpytest('--rootdir', pytester.path / 'root' / 'test')
@@ -65,11 +65,12 @@ def test_project_path_from_heuristic_with_nested_dirs(pytester):
     (pytester.path / 'root' / 'foobar').mkdir(parents=True)
     (pytester.path / 'root' / 'test1' / 'test2').mkdir(parents=True)
     (pytester.path / 'root' / 'pyproject.toml').write_text('#')
+    expected = str(pytester.path / 'root')
     (pytester.path / 'root' / 'test1' / 'test2' / 'test_path.py').write_text(
         cleandoc(f"""
             def test_path(imports_project_paths):
                 assert len(imports_project_paths) == 1
-                assert str(imports_project_paths[0]) == '{pytester.path / 'root'}'
+                assert str(imports_project_paths[0]) == {expected!r}
             """)
     )
     result = pytester.runpytest('--rootdir', pytester.path / 'root' / 'test1' / 'test2')
@@ -81,11 +82,12 @@ def test_project_path_from_heuristic_with_setup_py(pytester):
     (pytester.path / 'root' / 'foobar').mkdir(parents=True)
     (pytester.path / 'root' / 'test').mkdir(parents=True)
     (pytester.path / 'root' / 'setup.py').write_text('#')
+    expected = str(pytester.path / 'root')
     (pytester.path / 'root' / 'test' / 'test_path.py').write_text(
         cleandoc(f"""
             def test_path(imports_project_paths):
                 assert len(imports_project_paths) == 1
-                assert str(imports_project_paths[0]) == '{pytester.path / 'root'}'
+                assert str(imports_project_paths[0]) == {expected!r}
             """)
     )
     result = pytester.runpytest('--rootdir', pytester.path / 'root' / 'test')
