@@ -14,17 +14,15 @@ dependencies = [
 imports = "pytest_imports.plugin"
 
 [dependency-groups]
+nox = ["nox>=2026.2.9"]
 lint = ["ruff>=0.15.8"]
 typecheck = ["mypy>=1.20.0"]
 test = ["pytest-mock>=3.15.1"]
 coverage = [{include-group = "test"}, "coverage>=7.13.5"]
 audit = ["pip-audit>=2.10.0"]
 dev = [
-    "nox>=2026.2.9",
-    {include-group = "lint"},
-    {include-group = "typecheck"},
-    {include-group = "coverage"},
-    {include-group = "audit"},
+    {include-group = "nox"},
+    "pytest>=7.2.2",
 ]
 
 [build-system]

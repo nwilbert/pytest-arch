@@ -111,5 +111,12 @@ def coverage(session):
 
 @nox.session
 def audit(session: nox.Session) -> None:
-    _sync(session, 'dev', include_project=True)
+    session.run(
+        'uv',
+        'sync',
+        '--all-groups',
+        '--exact',
+        '--active',
+        external=True,
+    )
     session.run('pip-audit', '--local')
