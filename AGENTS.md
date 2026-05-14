@@ -7,15 +7,15 @@ See README.md for the full API reference and usage examples.
 ## Commands
 
 ```bash
-# Run all default nox sessions (format, lint, mypy, test, coverage, pytest_compat, audit)
-nox
+# Run all default nox sessions (format, lint, mypy, test, audit)
+uv run nox
 
 # Run a single nox session
-nox -s test              # tests with lockfile pytest version
-nox -s pytest_compat     # tests across Python + pytest version matrix (integration only)
-nox -s lint
-nox -s mypy
-nox -s coverage
+uv run nox -s test              # tests with lockfile pytest version
+uv run nox -s pytest_compat     # tests across Python + pytest version matrix (integration only)
+uv run nox -s lint
+uv run nox -s mypy
+uv run nox -s coverage
 
 # Run tests directly (faster, no nox overhead)
 uv run pytest
@@ -24,7 +24,7 @@ uv run pytest
 uv run pytest test/unit/test_query.py::test_name
 
 # Coverage with HTML report
-nox -s coverage -- html
+uv run nox -s coverage -- html
 ```
 
 ## Architecture
