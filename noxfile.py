@@ -7,6 +7,7 @@ src_path = 'src'
 code_paths = [src_path, 'test', 'noxfile.py']
 
 nox.options.default_venv_backend = 'uv'
+nox.options.reuse_existing_virtualenvs = True
 nox.options.sessions = [
     'format',
     'lint',
@@ -18,8 +19,29 @@ nox.options.sessions = [
 ]
 
 
-def _sync(session: nox.Session, group: str) -> None:
-    session.run('uv', 'sync', '--group', group, '--active', external=True)
+def _sync(session: nox.Session, *groups: str, include_project: bool = False) -> None:
+    if include_project:
+        group_args = [arg for group in groups for arg in ('--group', group)]
+        session.run(
+            'uv',
+            'sync',
+            '--no-default-groups',
+            *group_args,
+            '--exact',
+            '--active',
+            external=True,
+        )
+    else:
+        group_args = [arg for group in groups for arg in ('--only-group', group)]
+        session.run(
+            'uv',
+            'sync',
+            *group_args,
+            '--exact',
+            '--active',
+            '--no-install-project',
+            external=True,
+        )
 
 
 @nox.session
@@ -42,7 +64,7 @@ def mypy(session):
 
 @nox.session
 def test(session):
-    _sync(session, 'test')
+    _sync(session, 'test', include_project=True)
     session.run('pytest')
 
 
@@ -63,14 +85,14 @@ PYTEST_PYTHON_MATRIX = [
     ],
 )
 def pytest_compat(session, pytest_version):
-    _sync(session, 'test')
+    _sync(session, 'test', include_project=True)
     session.run('uv', 'pip', 'install', f'pytest~={pytest_version}.0', external=True)
     session.run('pytest', 'test/integration')
 
 
 @nox.session
 def coverage(session):
-    _sync(session, 'coverage')
+    _sync(session, 'coverage', include_project=True)
     session.run(
         'coverage',
         'run',
@@ -91,5 +113,5 @@ def coverage(session):
 
 @nox.session
 def audit(session: nox.Session) -> None:
-    _sync(session, 'audit')
+    _sync(session, 'dev', include_project=True)
     session.run('pip-audit', '--local')

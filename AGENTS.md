@@ -51,6 +51,10 @@ The plugin registers itself via the `pytest11` entry point in `pyproject.toml`, 
 
 - Always update AGENTS.md and README.md when making changes that affect commands, architecture, or usage.
 
+## Verification
+
+- Always run `uv run nox` after making changes to verify all sessions pass.
+
 ## Git
 
 - Never add `Co-Authored-By` lines to commit messages.
