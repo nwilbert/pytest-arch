@@ -45,6 +45,7 @@ def _sync(session: nox.Session, *groups: str, include_project: bool = False) -> 
 @nox.session
 def format(session):
     _sync(session, 'lint')
+    session.run('ruff', 'check', '--select', 'I', '--fix', *code_paths)
     session.run('ruff', 'format', *session.posargs, *code_paths)
 
 
